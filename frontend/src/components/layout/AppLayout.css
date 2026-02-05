@@ -1,0 +1,25 @@
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+}
+
+.app-layout-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.app-layout-main {
+  flex: 1;
+  padding: var(--spacing-6);
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .app-layout-main {
+    padding: var(--spacing-4);
+  }
+}
