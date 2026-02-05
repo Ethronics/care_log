@@ -1,0 +1,24 @@
+.staff-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.staff-form h2 {
+  margin-bottom: var(--spacing-6);
+}
+
+.staff-form-field {
+  margin-bottom: var(--spacing-4);
+}
+
+.staff-form-actions {
+  display: flex;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-6);
+}
+
+@media (max-width: 768px) {
+  .staff-form-actions {
+    flex-direction: column;
+  }
+}

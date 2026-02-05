@@ -1,1 +1,1 @@
-// Placeholder index file
+export { staffService } from './staffService'

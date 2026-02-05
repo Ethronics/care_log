@@ -4,14 +4,19 @@ import { ROUTES } from '../utils/constants'
 import { ProtectedRoute } from './ProtectedRoute'
 import { PublicRoute } from './PublicRoute'
 
-// Lazy load pages (will be implemented later)
+// Lazy load pages
 const HomePage = React.lazy(() => import('../pages/Home'))
 const LoginPage = React.lazy(() => import('../pages/Login'))
 const DashboardPage = React.lazy(() => import('../pages/Dashboard'))
 
+// Staff pages
+const StaffListPage = React.lazy(() => import('../features/staff/pages/StaffListPage'))
+const StaffCreatePage = React.lazy(() => import('../features/staff/pages/StaffCreatePage'))
+const StaffEditPage = React.lazy(() => import('../features/staff/pages/StaffEditPage'))
+const StaffDetailPage = React.lazy(() => import('../features/staff/pages/StaffDetailPage'))
+
 // Placeholder components for routes that will be implemented
 const RotaPage = () => <div>Rota Page - Coming Soon</div>
-const StaffPage = () => <div>Staff Page - Coming Soon</div>
 const ServiceUsersPage = () => <div>Service Users Page - Coming Soon</div>
 const CareLogsPage = () => <div>Care Logs Page - Coming Soon</div>
 const AbsencesPage = () => <div>Absences Page - Coming Soon</div>
@@ -53,7 +58,31 @@ export const routes: RouteObject[] = [
     path: ROUTES.STAFF,
     element: (
       <ProtectedRoute>
-        <StaffPage />
+        <StaffListPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: `${ROUTES.STAFF}/new`,
+    element: (
+      <ProtectedRoute requiredRole="manager">
+        <StaffCreatePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: `${ROUTES.STAFF}/:id`,
+    element: (
+      <ProtectedRoute>
+        <StaffDetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: `${ROUTES.STAFF}/:id/edit`,
+    element: (
+      <ProtectedRoute requiredRole="manager">
+        <StaffEditPage />
       </ProtectedRoute>
     ),
   },

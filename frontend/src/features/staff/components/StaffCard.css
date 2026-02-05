@@ -1,0 +1,87 @@
+.staff-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.staff-card {
+  margin-bottom: var(--spacing-4);
+}
+
+.staff-card-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.staff-card-photo {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.staff-card-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .staff-card-avatar,
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .staff-card-avatar {
+    background-color: var(--color-primary-800);
+    color: var(--color-primary-200);
+  }
+}
+
+.staff-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.staff-card-name {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 var(--spacing-1) 0;
+  color: var(--color-text-primary);
+}
+
+.staff-card-email {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-1) 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staff-card-phone {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  margin: 0 0 var(--spacing-2) 0;
+}
+
+.staff-card-badges {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .staff-card-photo,
+  .staff-card-avatar {
+    width: 56px;
+    height: 56px;
+    font-size: var(--font-size-xl);
+  }
+}

@@ -1,0 +1,131 @@
+.staff-detail {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.staff-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-6);
+}
+
+.staff-detail-card {
+  margin-bottom: var(--spacing-6);
+}
+
+.staff-detail-content {
+  display: flex;
+  gap: var(--spacing-6);
+  align-items: flex-start;
+}
+
+.staff-detail-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.staff-detail-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .staff-detail-avatar,
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .staff-detail-avatar {
+    background-color: var(--color-primary-800);
+    color: var(--color-primary-200);
+  }
+}
+
+.staff-detail-info {
+  flex: 1;
+}
+
+.staff-detail-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+  flex-wrap: wrap;
+}
+
+.staff-detail-name-row h1 {
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+}
+
+.staff-detail-badges {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+.staff-detail-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-4);
+}
+
+.staff-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.staff-detail-field label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.staff-detail-field p {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+}
+
+.staff-detail-actions {
+  border: 2px solid var(--color-error-light);
+  background-color: var(--color-error-light);
+}
+
+.staff-detail-actions h3 {
+  color: var(--color-error-dark);
+  margin-bottom: var(--spacing-2);
+}
+
+.staff-detail-actions p {
+  color: var(--color-error-dark);
+  margin-bottom: var(--spacing-4);
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 768px) {
+  .staff-detail-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .staff-detail-name-row {
+    justify-content: center;
+  }
+
+  .staff-detail-details {
+    grid-template-columns: 1fr;
+  }
+}
