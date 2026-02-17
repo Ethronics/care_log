@@ -85,6 +85,8 @@ interface DemoStoreContextValue extends DemoStore {
   deleteShift: (id: string) => boolean
   assignShift: (shiftId: string, staffId: string) => Shift | undefined
   unassignShift: (shiftId: string) => Shift | undefined
+  /** Unassign all shifts in date range (for demo). Returns count unassigned. */
+  unassignShiftsInRange: (from: string, to: string) => number
   // Care logs
   getCareLog: (id: string) => CareLog | undefined
   getCareLogsByServiceUser: (serviceUserId: string) => CareLog[]
@@ -103,6 +105,10 @@ interface DemoStoreContextValue extends DemoStore {
   // JSON file persistence
   exportDataAsJson: () => void
   importDataFromJson: (file: File) => Promise<void>
+  /** Replace all data with the showcase seed (for demo/reset). */
+  resetToDemoData: () => void
+  // Automated rota builder (auto-fill)
+  autoFillRota: (from: string, to: string) => { assigned: number; skipped: number }
 }
 
 const DemoStoreContext = createContext<DemoStoreContextValue | null>(null)
@@ -342,6 +348,25 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [updateShift]
   )
 
+  const unassignShiftsInRange = useCallback(
+    (from: string, to: string): number => {
+      const toUnassign = store.shifts.filter(
+        (s) => s.date >= from && s.date <= to && s.staffId != null
+      )
+      if (toUnassign.length === 0) return 0
+      const ids = new Set(toUnassign.map((s) => s.id))
+      const now = new Date().toISOString()
+      setStore((prev) => ({
+        ...prev,
+        shifts: prev.shifts.map((s) =>
+          ids.has(s.id) ? { ...s, staffId: null, updatedAt: now } : s
+        ),
+      }))
+      return toUnassign.length
+    },
+    [store.shifts]
+  )
+
   const getCareLog = useCallback(
     (id: string) => store.careLogs.find((l) => l.id === id),
     [store.careLogs]
@@ -517,6 +542,53 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     []
   )
 
+  const resetToDemoData = useCallback(() => {
+    setStore(getSeedStore())
+  }, [])
+
+  const autoFillRota = useCallback(
+    (from: string, to: string): { assigned: number; skipped: number } => {
+      const shifts = store.shifts.filter(
+        (s) => s.date >= from && s.date <= to && !s.staffId
+      )
+      if (shifts.length === 0) {
+        return { assigned: 0, skipped: 0 }
+      }
+      const approvedAbsences = store.absences.filter((a) => a.status === ABSENCE_STATUS.APPROVED)
+      const staffList = store.staff.filter((s) => s.isActive).sort((a, b) => a.id.localeCompare(b.id))
+      const isOnLeave = (staffId: string, date: string): boolean =>
+        approvedAbsences.some(
+          (a) => a.staffId === staffId && a.startDate <= date && a.endDate >= date
+        )
+      const sortedShifts = [...shifts].sort(
+        (a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)
+      )
+      let rotationIndex = 0
+      const assignments: { shiftId: string; staffId: string }[] = []
+      for (const shift of sortedShifts) {
+        const available = staffList.filter((s) => !isOnLeave(s.id, shift.date)).map((s) => s.id)
+        if (available.length === 0) continue
+        const staffId = available[rotationIndex % available.length]
+        assignments.push({ shiftId: shift.id, staffId })
+        rotationIndex++
+      }
+      if (assignments.length === 0) {
+        return { assigned: 0, skipped: sortedShifts.length }
+      }
+      setStore((prev) => {
+        const byId = new Map(assignments.map((a) => [a.shiftId, a.staffId]))
+        return {
+          ...prev,
+          shifts: prev.shifts.map((s) =>
+            byId.has(s.id) ? { ...s, staffId: byId.get(s.id)!, updatedAt: new Date().toISOString() } : s
+          ),
+        }
+      })
+      return { assigned: assignments.length, skipped: sortedShifts.length - assignments.length }
+    },
+    [store.shifts, store.absences, store.staff]
+  )
+
   const value = useMemo<DemoStoreContextValue>(
     () => ({
       ...store,
@@ -539,6 +611,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       deleteShift,
       assignShift,
       unassignShift,
+      unassignShiftsInRange,
       getCareLog,
       getCareLogsByServiceUser,
       getCareLogs,
@@ -554,6 +627,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       rejectAbsence,
       exportDataAsJson,
       importDataFromJson,
+      resetToDemoData,
+      autoFillRota,
     }),
     [
       store,
@@ -576,6 +651,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       deleteShift,
       assignShift,
       unassignShift,
+      unassignShiftsInRange,
       getCareLog,
       getCareLogsByServiceUser,
       getCareLogs,
@@ -591,6 +667,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       rejectAbsence,
       exportDataAsJson,
       importDataFromJson,
+      resetToDemoData,
+      autoFillRota,
     ]
   )
 

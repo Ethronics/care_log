@@ -99,6 +99,9 @@ export function DashboardPage() {
           >
             Import data (JSON)
           </Button>
+          <Button variant="secondary" size="sm" onClick={() => store.resetToDemoData()}>
+            Reset to demo data
+          </Button>
           <input
             ref={importInputRef}
             type="file"

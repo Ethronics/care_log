@@ -18,6 +18,8 @@ export function RotaPage() {
     : store.getStaffList().find((s) => s.email === user?.email)?.id ?? null
 
   const [weekStart, setWeekStart] = useState(() => getWeekRange(new Date()).from)
+  const [autoFillResult, setAutoFillResult] = useState<{ assigned: number; skipped: number } | null>(null)
+  const [unassignCount, setUnassignCount] = useState<number | null>(null)
   const { from, to } = getWeekRange(new Date(weekStart + 'T12:00:00'))
   const shifts = store.getShifts(
     currentStaffId ? { from, to, staffId: currentStaffId } : { from, to }
@@ -32,6 +34,13 @@ export function RotaPage() {
     return () => setItems([])
   }, [setItems, isAdmin])
 
+  useEffect(() => {
+    setAutoFillResult(null)
+    setUnassignCount(null)
+  }, [weekStart])
+
+  const unassignedThisWeek = shifts.filter((s) => !s.staffId).length
+
   const shiftsByDate = weekDays.reduce((acc, day) => {
     acc[day] = shifts.filter((s) => s.date === day)
     return acc
@@ -42,14 +51,50 @@ export function RotaPage() {
       <div className={styles.header}>
         <h1 className="page-title">{isAdmin ? 'Rota' : 'My shifts'}</h1>
         {isAdmin && (
-          <Link to={ROUTES_ROTA.NEW}>
-            <Button variant="primary">Add shift</Button>
-          </Link>
+          <div className={styles.headerActions}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                const n = store.unassignShiftsInRange(from, to)
+                setUnassignCount(n)
+                setAutoFillResult(null)
+              }}
+            >
+              Unassign this week
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                const result = store.autoFillRota(from, to)
+                setAutoFillResult(result)
+                setUnassignCount(null)
+              }}
+            >
+              Auto-Fill
+            </Button>
+            <Link to={ROUTES_ROTA.NEW}>
+              <Button variant="primary">Add shift</Button>
+            </Link>
+          </div>
         )}
       </div>
+      {isAdmin && unassignCount !== null && unassignCount > 0 && (
+        <p className="body-text text-muted" style={{ marginBottom: 'var(--space-2)' }}>
+          Unassigned {unassignCount} shift(s). Click <strong>Auto-Fill</strong> to assign staff automatically.
+        </p>
+      )}
+      {isAdmin && autoFillResult && (
+        <p className="body-text text-muted" style={{ marginBottom: 'var(--space-2)' }}>
+          {autoFillResult.assigned > 0 && `Assigned ${autoFillResult.assigned} shift(s). `}
+          {autoFillResult.skipped > 0 && `${autoFillResult.skipped} shift(s) had no available staff.`}
+          {autoFillResult.assigned === 0 && autoFillResult.skipped === 0 && 'No unassigned shifts this week.'}
+        </p>
+      )}
       <p className="body-text text-muted" style={{ marginBottom: 'var(--space-4)' }}>
         {isAdmin
-          ? 'Schedule and assign shifts. Drag or use assign to allocate staff.'
+          ? unassignedThisWeek > 0
+            ? `${unassignedThisWeek} unassigned shift(s) this week. Use Auto-Fill or assign manually.`
+            : 'Schedule and assign shifts. Drag or use assign to allocate staff.'
           : 'Your upcoming shifts for this week.'}
       </p>
 
