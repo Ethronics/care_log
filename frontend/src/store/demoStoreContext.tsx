@@ -11,6 +11,10 @@ import { STORAGE_KEYS } from '../utils/constants'
 import { DEFAULT_DEMO_STORE, type DemoStore } from '../types/demoStore'
 import type { Staff, StaffCreateInput } from '../types/staff'
 import type { ServiceUser, ServiceUserCreateInput } from '../types/serviceUser'
+import type { Shift, ShiftCreateInput } from '../types/shift'
+import type { CareLog, CareLogCreateInput } from '../types/careLog'
+import type { Absence, AbsenceCreateInput } from '../types/absence'
+import { ABSENCE_STATUS } from '../types/absence'
 import { getSeedStore } from '../data/seed'
 
 function loadStore(): DemoStore {
@@ -22,6 +26,9 @@ function loadStore(): DemoStore {
         return {
           staff: parsed.staff,
           serviceUsers: Array.isArray(parsed.serviceUsers) ? parsed.serviceUsers : [],
+          shifts: Array.isArray(parsed.shifts) ? parsed.shifts : [],
+          careLogs: Array.isArray(parsed.careLogs) ? parsed.careLogs : [],
+          absences: Array.isArray(parsed.absences) ? parsed.absences : [],
         }
       }
     }
@@ -58,6 +65,29 @@ interface DemoStoreContextValue extends DemoStore {
   addServiceUser: (input: ServiceUserCreateInput) => ServiceUser
   updateServiceUser: (id: string, input: Partial<ServiceUser>) => ServiceUser | undefined
   deactivateServiceUser: (id: string) => ServiceUser | undefined
+  // Shifts
+  getShift: (id: string) => Shift | undefined
+  getShifts: (options?: { from?: string; to?: string; staffId?: string }) => Shift[]
+  addShift: (input: ShiftCreateInput) => Shift
+  updateShift: (id: string, input: Partial<Shift>) => Shift | undefined
+  deleteShift: (id: string) => boolean
+  assignShift: (shiftId: string, staffId: string) => Shift | undefined
+  unassignShift: (shiftId: string) => Shift | undefined
+  // Care logs
+  getCareLog: (id: string) => CareLog | undefined
+  getCareLogsByServiceUser: (serviceUserId: string) => CareLog[]
+  getCareLogs: (options?: { serviceUserId?: string; limit?: number }) => CareLog[]
+  addCareLog: (input: CareLogCreateInput) => CareLog
+  updateCareLog: (id: string, input: Partial<CareLog>) => CareLog | undefined
+  deleteCareLog: (id: string) => boolean
+  // Absences
+  getAbsence: (id: string) => Absence | undefined
+  getAbsences: (options?: { staffId?: string; status?: Absence['status'] }) => Absence[]
+  getPendingAbsences: () => Absence[]
+  addAbsence: (input: AbsenceCreateInput) => Absence
+  updateAbsence: (id: string, input: Partial<Absence>) => Absence | undefined
+  approveAbsence: (id: string, decidedBy: string) => Absence | undefined
+  rejectAbsence: (id: string, decidedBy: string) => Absence | undefined
 }
 
 const DemoStoreContext = createContext<DemoStoreContextValue | null>(null)
@@ -210,6 +240,245 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [updateServiceUser]
   )
 
+  const getShift = useCallback(
+    (id: string) => store.shifts.find((s) => s.id === id),
+    [store.shifts]
+  )
+
+  const getShifts = useCallback(
+    (options?: { from?: string; to?: string; staffId?: string }): Shift[] => {
+      let list = [...store.shifts]
+      if (options?.from) {
+        list = list.filter((s) => s.date >= options.from!)
+      }
+      if (options?.to) {
+        list = list.filter((s) => s.date <= options.to!)
+      }
+      if (options?.staffId !== undefined) {
+        list = list.filter((s) => s.staffId === options.staffId)
+      }
+      return list.sort((a, b) => {
+        const d = a.date.localeCompare(b.date)
+        if (d !== 0) return d
+        return a.startTime.localeCompare(b.startTime)
+      })
+    },
+    [store.shifts]
+  )
+
+  const addShift = useCallback((input: ShiftCreateInput): Shift => {
+    const now = new Date().toISOString()
+    const shift: Shift = {
+      id: generateId('shift'),
+      date: input.date,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      serviceUserId: input.serviceUserId,
+      staffId: input.staffId ?? null,
+      notes: input.notes ?? '',
+      createdAt: now,
+      updatedAt: now,
+    }
+    setStore((prev) => ({ ...prev, shifts: [...prev.shifts, shift] }))
+    return shift
+  }, [])
+
+  const updateShift = useCallback(
+    (id: string, input: Partial<Shift>): Shift | undefined => {
+      const existing = store.shifts.find((s) => s.id === id)
+      if (!existing) return undefined
+      const now = new Date().toISOString()
+      const updated: Shift = {
+        ...existing,
+        ...input,
+        id: existing.id,
+        createdAt: existing.createdAt,
+        updatedAt: now,
+      }
+      setStore((prev) => {
+        const index = prev.shifts.findIndex((s) => s.id === id)
+        if (index === -1) return prev
+        const next = [...prev.shifts]
+        next[index] = updated
+        return { ...prev, shifts: next }
+      })
+      return updated
+    },
+    [store.shifts]
+  )
+
+  const deleteShift = useCallback(
+    (id: string): boolean => {
+      const index = store.shifts.findIndex((s) => s.id === id)
+      if (index === -1) return false
+      setStore((prev) => ({ ...prev, shifts: prev.shifts.filter((s) => s.id !== id) }))
+      return true
+    },
+    [store.shifts]
+  )
+
+  const assignShift = useCallback(
+    (shiftId: string, staffId: string): Shift | undefined => updateShift(shiftId, { staffId }),
+    [updateShift]
+  )
+
+  const unassignShift = useCallback(
+    (shiftId: string): Shift | undefined => updateShift(shiftId, { staffId: null }),
+    [updateShift]
+  )
+
+  const getCareLog = useCallback(
+    (id: string) => store.careLogs.find((l) => l.id === id),
+    [store.careLogs]
+  )
+
+  const getCareLogsByServiceUser = useCallback(
+    (serviceUserId: string): CareLog[] =>
+      [...store.careLogs]
+        .filter((l) => l.serviceUserId === serviceUserId)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [store.careLogs]
+  )
+
+  const getCareLogs = useCallback(
+    (options?: { serviceUserId?: string; limit?: number }): CareLog[] => {
+      let list = [...store.careLogs]
+      if (options?.serviceUserId) {
+        list = list.filter((l) => l.serviceUserId === options.serviceUserId)
+      }
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      if (options?.limit) {
+        list = list.slice(0, options.limit)
+      }
+      return list
+    },
+    [store.careLogs]
+  )
+
+  const addCareLog = useCallback((input: CareLogCreateInput): CareLog => {
+    const now = new Date().toISOString()
+    const log: CareLog = {
+      id: generateId('log'),
+      serviceUserId: input.serviceUserId,
+      authorId: input.authorId,
+      type: input.type,
+      content: input.content,
+      createdAt: now,
+      updatedAt: now,
+    }
+    setStore((prev) => ({ ...prev, careLogs: [...prev.careLogs, log] }))
+    return log
+  }, [])
+
+  const updateCareLog = useCallback(
+    (id: string, input: Partial<CareLog>): CareLog | undefined => {
+      const existing = store.careLogs.find((l) => l.id === id)
+      if (!existing) return undefined
+      const now = new Date().toISOString()
+      const updated: CareLog = {
+        ...existing,
+        ...input,
+        id: existing.id,
+        serviceUserId: existing.serviceUserId,
+        authorId: existing.authorId,
+        createdAt: existing.createdAt,
+        updatedAt: now,
+      }
+      setStore((prev) => {
+        const index = prev.careLogs.findIndex((l) => l.id === id)
+        if (index === -1) return prev
+        const next = [...prev.careLogs]
+        next[index] = updated
+        return { ...prev, careLogs: next }
+      })
+      return updated
+    },
+    [store.careLogs]
+  )
+
+  const deleteCareLog = useCallback(
+    (id: string): boolean => {
+      const index = store.careLogs.findIndex((l) => l.id === id)
+      if (index === -1) return false
+      setStore((prev) => ({ ...prev, careLogs: prev.careLogs.filter((l) => l.id !== id) }))
+      return true
+    },
+    [store.careLogs]
+  )
+
+  const getAbsence = useCallback(
+    (id: string) => store.absences.find((a) => a.id === id),
+    [store.absences]
+  )
+
+  const getAbsences = useCallback(
+    (options?: { staffId?: string; status?: Absence['status'] }): Absence[] => {
+      let list = [...store.absences]
+      if (options?.staffId) list = list.filter((a) => a.staffId === options.staffId)
+      if (options?.status) list = list.filter((a) => a.status === options.status)
+      return list.sort(
+        (a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime()
+      )
+    },
+    [store.absences]
+  )
+
+  const getPendingAbsences = useCallback(
+    (): Absence[] => getAbsences({ status: ABSENCE_STATUS.PENDING }),
+    [getAbsences]
+  )
+
+  const addAbsence = useCallback((input: AbsenceCreateInput): Absence => {
+    const now = new Date().toISOString()
+    const absence: Absence = {
+      id: generateId('abs'),
+      staffId: input.staffId,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      type: input.type,
+      status: ABSENCE_STATUS.PENDING,
+      notes: input.notes ?? '',
+      requestedAt: now,
+      decidedAt: null,
+      decidedBy: null,
+    }
+    setStore((prev) => ({ ...prev, absences: [...prev.absences, absence] }))
+    return absence
+  }, [])
+
+  const updateAbsence = useCallback(
+    (id: string, input: Partial<Absence>): Absence | undefined => {
+      const existing = store.absences.find((a) => a.id === id)
+      if (!existing) return undefined
+      const updated: Absence = { ...existing, ...input }
+      setStore((prev) => {
+        const index = prev.absences.findIndex((a) => a.id === id)
+        if (index === -1) return prev
+        const next = [...prev.absences]
+        next[index] = updated
+        return { ...prev, absences: next }
+      })
+      return updated
+    },
+    [store.absences]
+  )
+
+  const approveAbsence = useCallback(
+    (id: string, decidedBy: string): Absence | undefined => {
+      const now = new Date().toISOString()
+      return updateAbsence(id, { status: ABSENCE_STATUS.APPROVED, decidedAt: now, decidedBy })
+    },
+    [updateAbsence]
+  )
+
+  const rejectAbsence = useCallback(
+    (id: string, decidedBy: string): Absence | undefined => {
+      const now = new Date().toISOString()
+      return updateAbsence(id, { status: ABSENCE_STATUS.REJECTED, decidedAt: now, decidedBy })
+    },
+    [updateAbsence]
+  )
+
   const value = useMemo<DemoStoreContextValue>(
     () => ({
       ...store,
@@ -225,6 +494,26 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       addServiceUser,
       updateServiceUser,
       deactivateServiceUser,
+      getShift,
+      getShifts,
+      addShift,
+      updateShift,
+      deleteShift,
+      assignShift,
+      unassignShift,
+      getCareLog,
+      getCareLogsByServiceUser,
+      getCareLogs,
+      addCareLog,
+      updateCareLog,
+      deleteCareLog,
+      getAbsence,
+      getAbsences,
+      getPendingAbsences,
+      addAbsence,
+      updateAbsence,
+      approveAbsence,
+      rejectAbsence,
     }),
     [
       store,
@@ -240,6 +529,26 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       addServiceUser,
       updateServiceUser,
       deactivateServiceUser,
+      getShift,
+      getShifts,
+      addShift,
+      updateShift,
+      deleteShift,
+      assignShift,
+      unassignShift,
+      getCareLog,
+      getCareLogsByServiceUser,
+      getCareLogs,
+      addCareLog,
+      updateCareLog,
+      deleteCareLog,
+      getAbsence,
+      getAbsences,
+      getPendingAbsences,
+      addAbsence,
+      updateAbsence,
+      approveAbsence,
+      rejectAbsence,
     ]
   )
 

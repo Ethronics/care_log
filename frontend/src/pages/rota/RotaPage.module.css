@@ -1,0 +1,144 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.weekNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.weekLabel {
+  font-weight: var(--font-semibold);
+  min-width: 200px;
+  text-align: center;
+}
+
+.emptyCard {
+  text-align: center;
+  padding: var(--space-8) var(--space-6);
+}
+
+.emptyButton {
+  margin-top: var(--space-3);
+}
+
+.weekGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .weekGrid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: var(--space-2);
+  }
+}
+
+.dayColumn {
+  min-width: 0;
+}
+
+.dayHeader {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.shifts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.shiftCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.shiftTime {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text);
+}
+
+.shiftServiceUser {
+  font-size: var(--text-sm);
+  color: var(--color-primary-700);
+}
+
+.shiftStaff {
+  margin-top: var(--space-1);
+}
+
+.shiftActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.link {
+  color: var(--color-primary-600);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.dropdownWrap {
+  position: relative;
+}
+
+.dropdownBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: var(--space-1);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 101;
+  min-width: 160px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.dropdownItem {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.dropdownItem:hover {
+  background: var(--color-bg-muted);
+}

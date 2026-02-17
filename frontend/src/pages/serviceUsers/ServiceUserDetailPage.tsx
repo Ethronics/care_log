@@ -4,6 +4,7 @@ import { useBreadcrumbs } from '../../contexts/BreadcrumbContext'
 import { useDemoStore } from '../../store/demoStoreContext'
 import { ROUTES, ROUTES_SERVICE_USERS } from '../../utils/constants'
 import { Card, CardHeader, CardTitle, CardContent, Button } from '../../components/ui'
+import { CareTimeline } from '../careLogs/CareTimeline'
 import styles from './ServiceUserDetailPage.module.css'
 
 function formatDate(iso: string): string {
@@ -109,6 +110,8 @@ export function ServiceUserDetailPage() {
             )}
           </CardContent>
         </Card>
+
+        <CareTimeline serviceUserId={id} serviceUserName={user.name} />
       </div>
     </div>
   )

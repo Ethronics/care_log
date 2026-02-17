@@ -18,6 +18,14 @@ import {
   ServiceUserEditPage,
   ServiceUserDetailPage,
 } from './pages/serviceUsers'
+import {
+  RotaPage,
+  MyShiftsPage,
+  ShiftCreatePage,
+  ShiftEditPage,
+} from './pages/rota'
+import { CareLogsListPage, CareLogEditPage } from './pages/careLogs'
+import { AbsencesPage } from './pages/absences'
 import { ROUTES, ROLES } from './utils/constants'
 import './App.css'
 
@@ -39,10 +47,26 @@ function App() {
               }
             >
               <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
-              <Route
-                path={ROUTES.ROTA}
-                element={<PlaceholderPage title="Rota" description="Shift scheduling and calendar." />}
-              />
+              <Route path="rota">
+                <Route index element={<RotaPage />} />
+                <Route path="my-shifts" element={<MyShiftsPage />} />
+                <Route
+                  path="new"
+                  element={
+                    <RoleGuard allowedRoles={[ROLES.ADMIN]}>
+                      <ShiftCreatePage />
+                    </RoleGuard>
+                  }
+                />
+                <Route
+                  path=":id/edit"
+                  element={
+                    <RoleGuard allowedRoles={[ROLES.ADMIN]}>
+                      <ShiftEditPage />
+                    </RoleGuard>
+                  }
+                />
+              </Route>
               <Route
                 path="staff"
                 element={
@@ -61,24 +85,11 @@ function App() {
                 <Route path=":id" element={<ServiceUserDetailPage />} />
                 <Route path=":id/edit" element={<ServiceUserEditPage />} />
               </Route>
-              <Route
-                path={ROUTES.CARE_LOGS}
-                element={
-                  <PlaceholderPage
-                    title="Care logs"
-                    description="Care activity and timeline entries."
-                  />
-                }
-              />
-              <Route
-                path={ROUTES.ABSENCES}
-                element={
-                  <PlaceholderPage
-                    title="Leave & absence"
-                    description="Leave requests and absence management."
-                  />
-                }
-              />
+              <Route path="care-logs">
+                <Route index element={<CareLogsListPage />} />
+                <Route path=":id/edit" element={<CareLogEditPage />} />
+              </Route>
+              <Route path={ROUTES.ABSENCES} element={<AbsencesPage />} />
             </Route>
             <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
           </Routes>

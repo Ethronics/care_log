@@ -40,4 +40,22 @@ export const ROUTES_SERVICE_USERS = {
   DETAIL: (id: string) => `/service-users/${id}`,
 } as const
 
+export const ROUTES_ROTA = {
+  LIST: '/rota',
+  NEW: '/rota/new',
+  EDIT: (id: string) => `/rota/${id}/edit`,
+  MY_SHIFTS: '/rota/my-shifts',
+} as const
+
+export const ROUTES_CARE_LOGS = {
+  LIST: '/care-logs',
+  NEW: (serviceUserId: string) => `/care-logs/new?serviceUser=${serviceUserId}`,
+  EDIT: (id: string) => `/care-logs/${id}/edit`,
+} as const
+
+export const ROUTES_ABSENCES = {
+  LIST: '/absences',
+  REQUEST: '/absences/request',
+} as const
+
 export type ThemeMode = 'light' | 'dark'
