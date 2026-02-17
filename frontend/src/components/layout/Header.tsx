@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useTheme } from '../../contexts/ThemeContext'
-import { Button } from '../ui'
-import { ROUTES } from '../../utils/constants'
+import { getRole } from '../../utils/auth'
+import { getNavItemsForRole } from '../../utils/navConfig'
+import { ROUTES, ROLES } from '../../utils/constants'
+import { Badge } from '../ui'
 import styles from './Header.module.css'
 
 interface HeaderProps {
@@ -10,6 +12,8 @@ interface HeaderProps {
 
 export function Header({ onMenuClick }: HeaderProps) {
   const { theme, toggleTheme } = useTheme()
+  const role = getRole()
+  const navItems = getNavItemsForRole(role)
 
   return (
     <header className={styles.header} role="banner">
@@ -28,12 +32,20 @@ export function Header({ onMenuClick }: HeaderProps) {
           Log My Care
         </Link>
         <nav className={styles.nav} aria-label="Main">
-          <Link to={ROUTES.DASHBOARD}>Dashboard</Link>
-          <Link to={ROUTES.ROTA}>Rota</Link>
-          <Link to={ROUTES.STAFF}>Staff</Link>
-          <Link to={ROUTES.SERVICE_USERS}>Service users</Link>
+          {navItems.map(({ to, label }) => (
+            <Link key={to} to={to}>
+              {label}
+            </Link>
+          ))}
         </nav>
         <div className={styles.actions}>
+          {role && (
+            <span className={styles.roleBadge}>
+              <Badge variant={role === ROLES.ADMIN ? 'info' : 'default'}>
+                {role === ROLES.ADMIN ? 'Admin' : 'Staff'}
+              </Badge>
+            </span>
+          )}
           <button
             type="button"
             className={styles.themeToggle}

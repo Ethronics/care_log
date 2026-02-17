@@ -3,13 +3,14 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { BreadcrumbProvider } from './contexts/BreadcrumbContext'
 import { MainLayout } from './components/layout'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
+import { RoleGuard } from './components/auth/RoleGuard'
 import {
   HomePage,
   LoginPage,
   DashboardPage,
   PlaceholderPage,
 } from './pages'
-import { ROUTES } from './utils/constants'
+import { ROUTES, ROLES } from './utils/constants'
 import './App.css'
 
 function App() {
@@ -35,7 +36,11 @@ function App() {
               />
               <Route
                 path={ROUTES.STAFF}
-                element={<PlaceholderPage title="Staff" description="Staff profiles and management." />}
+                element={
+                  <RoleGuard allowedRoles={[ROLES.ADMIN]}>
+                    <PlaceholderPage title="Staff" description="Staff profiles and management." />
+                  </RoleGuard>
+                }
               />
               <Route
                 path={ROUTES.SERVICE_USERS}

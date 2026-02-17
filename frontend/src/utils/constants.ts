@@ -13,11 +13,12 @@ export const ROUTES = {
   ABSENCES: '/absences',
 } as const
 
-export const USER_ROLES = {
-  MANAGER: 'manager',
-  SENIOR_CARER: 'senior_carer',
-  CARER: 'carer',
+export const ROLES = {
+  ADMIN: 'admin',
+  STAFF: 'staff',
 } as const
+
+export type Role = (typeof ROLES)[keyof typeof ROLES]
 
 export const STORAGE_KEYS = {
   TOKEN: 'token',
