@@ -22,4 +22,7 @@ export const USER_ROLES = {
 export const STORAGE_KEYS = {
   TOKEN: 'token',
   USER: 'user',
+  THEME: 'care_log_theme',
 } as const
+
+export type ThemeMode = 'light' | 'dark'
