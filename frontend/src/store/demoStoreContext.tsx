@@ -46,6 +46,18 @@ function saveStore(store: DemoStore): void {
   }
 }
 
+function parseStoreFromJson(raw: unknown): DemoStore | null {
+  if (!raw || typeof raw !== 'object') return null
+  const o = raw as Record<string, unknown>
+  return {
+    staff: Array.isArray(o.staff) ? o.staff as Staff[] : [],
+    serviceUsers: Array.isArray(o.serviceUsers) ? o.serviceUsers as ServiceUser[] : [],
+    shifts: Array.isArray(o.shifts) ? o.shifts as Shift[] : [],
+    careLogs: Array.isArray(o.careLogs) ? o.careLogs as CareLog[] : [],
+    absences: Array.isArray(o.absences) ? o.absences as Absence[] : [],
+  }
+}
+
 function generateId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
@@ -88,6 +100,9 @@ interface DemoStoreContextValue extends DemoStore {
   updateAbsence: (id: string, input: Partial<Absence>) => Absence | undefined
   approveAbsence: (id: string, decidedBy: string) => Absence | undefined
   rejectAbsence: (id: string, decidedBy: string) => Absence | undefined
+  // JSON file persistence
+  exportDataAsJson: () => void
+  importDataFromJson: (file: File) => Promise<void>
 }
 
 const DemoStoreContext = createContext<DemoStoreContextValue | null>(null)
@@ -479,6 +494,29 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [updateAbsence]
   )
 
+  const exportDataAsJson = useCallback(() => {
+    const json = JSON.stringify(store, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `care_log_data_${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [store])
+
+  const importDataFromJson = useCallback(
+    async (file: File): Promise<void> => {
+      const text = await file.text()
+      const parsed = JSON.parse(text) as unknown
+      const next = parseStoreFromJson(parsed)
+      if (next) {
+        setStore(next)
+      }
+    },
+    []
+  )
+
   const value = useMemo<DemoStoreContextValue>(
     () => ({
       ...store,
@@ -514,6 +552,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       updateAbsence,
       approveAbsence,
       rejectAbsence,
+      exportDataAsJson,
+      importDataFromJson,
     }),
     [
       store,
@@ -549,6 +589,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       updateAbsence,
       approveAbsence,
       rejectAbsence,
+      exportDataAsJson,
+      importDataFromJson,
     ]
   )
 

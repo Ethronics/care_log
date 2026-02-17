@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '../components/ui'
 import { useBreadcrumbs } from '../contexts/BreadcrumbContext'
@@ -45,6 +45,7 @@ export function DashboardPage() {
   const user = getUser()
   const isAdmin = user?.role === ROLES.ADMIN
   const currentStaffId = store.getStaffList().find((s) => s.email === user?.email)?.id ?? null
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   const today = todayISO()
   const todayEnd = today
@@ -88,6 +89,29 @@ export function DashboardPage() {
           <Link to={ROUTES_SERVICE_USERS.LIST}>
             <Button variant="secondary" size="sm">Service users</Button>
           </Link>
+          <Button variant="secondary" size="sm" onClick={() => store.exportDataAsJson()}>
+            Export data (JSON)
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => importInputRef.current?.click()}
+          >
+            Import data (JSON)
+          </Button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json,application/json"
+            className={styles.fileInput}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) {
+                store.importDataFromJson(file)
+                e.target.value = ''
+              }
+            }}
+          />
         </div>
 
         <div className="dashboard-grid">
