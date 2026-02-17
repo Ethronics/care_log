@@ -1,6 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { BreadcrumbProvider } from './contexts/BreadcrumbContext'
+import { DemoStoreProvider } from './store/demoStoreContext'
 import { MainLayout } from './components/layout'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { RoleGuard } from './components/auth/RoleGuard'
@@ -10,14 +11,16 @@ import {
   DashboardPage,
   PlaceholderPage,
 } from './pages'
+import { StaffListPage, StaffCreatePage, StaffEditPage } from './pages/staff'
 import { ROUTES, ROLES } from './utils/constants'
 import './App.css'
 
 function App() {
   return (
     <ThemeProvider>
-      <Router>
-        <BreadcrumbProvider>
+      <DemoStoreProvider>
+        <Router>
+          <BreadcrumbProvider>
           <Routes>
             <Route path={ROUTES.HOME} element={<HomePage />} />
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
@@ -35,13 +38,17 @@ function App() {
                 element={<PlaceholderPage title="Rota" description="Shift scheduling and calendar." />}
               />
               <Route
-                path={ROUTES.STAFF}
+                path="staff"
                 element={
                   <RoleGuard allowedRoles={[ROLES.ADMIN]}>
-                    <PlaceholderPage title="Staff" description="Staff profiles and management." />
+                    <Outlet />
                   </RoleGuard>
                 }
-              />
+              >
+                <Route index element={<StaffListPage />} />
+                <Route path="new" element={<StaffCreatePage />} />
+                <Route path=":id/edit" element={<StaffEditPage />} />
+              </Route>
               <Route
                 path={ROUTES.SERVICE_USERS}
                 element={
@@ -72,8 +79,9 @@ function App() {
             </Route>
             <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
           </Routes>
-        </BreadcrumbProvider>
-      </Router>
+          </BreadcrumbProvider>
+        </Router>
+      </DemoStoreProvider>
     </ThemeProvider>
   )
 }

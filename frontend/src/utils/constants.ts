@@ -24,6 +24,13 @@ export const STORAGE_KEYS = {
   TOKEN: 'token',
   USER: 'user',
   THEME: 'care_log_theme',
+  DEMO_DATA: 'care_log_demo_data',
+} as const
+
+export const ROUTES_STAFF = {
+  LIST: '/staff',
+  NEW: '/staff/new',
+  EDIT: (id: string) => `/staff/${id}/edit`,
 } as const
 
 export type ThemeMode = 'light' | 'dark'

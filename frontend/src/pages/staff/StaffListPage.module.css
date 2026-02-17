@@ -1,0 +1,139 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-bg-elevated);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table th {
+  font-weight: var(--font-semibold);
+  color: var(--color-text-muted);
+  background-color: var(--color-bg-muted);
+}
+
+.table tbody tr:hover {
+  background-color: var(--color-bg-muted);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.name {
+  font-weight: var(--font-medium);
+  color: var(--color-text);
+}
+
+.actionsCell {
+  white-space: nowrap;
+}
+
+.link {
+  color: var(--color-primary-600);
+  text-decoration: none;
+  margin-right: var(--space-3);
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.deactivateBtn {
+  background: none;
+  border: none;
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: 0;
+}
+
+.deactivateBtn:hover {
+  text-decoration: underline;
+}
+
+/* Mobile: show cards, hide table */
+.tableWrap {
+  display: none;
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.staffCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cardName {
+  font-weight: var(--font-semibold);
+  font-size: var(--text-base);
+}
+
+.cardBadge {
+  align-self: flex-start;
+}
+
+.cardActions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.emptyCard {
+  text-align: center;
+  padding: var(--space-10) var(--space-6);
+}
+
+.emptyContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.emptyTitle {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.emptyButton {
+  margin-top: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .tableWrap {
+    display: block;
+  }
+
+  .cardList {
+    display: none;
+  }
+}
