@@ -12,6 +12,12 @@ import {
   PlaceholderPage,
 } from './pages'
 import { StaffListPage, StaffCreatePage, StaffEditPage } from './pages/staff'
+import {
+  ServiceUserListPage,
+  ServiceUserCreatePage,
+  ServiceUserEditPage,
+  ServiceUserDetailPage,
+} from './pages/serviceUsers'
 import { ROUTES, ROLES } from './utils/constants'
 import './App.css'
 
@@ -49,15 +55,12 @@ function App() {
                 <Route path="new" element={<StaffCreatePage />} />
                 <Route path=":id/edit" element={<StaffEditPage />} />
               </Route>
-              <Route
-                path={ROUTES.SERVICE_USERS}
-                element={
-                  <PlaceholderPage
-                    title="Service users"
-                    description="People receiving care – profiles and timeline."
-                  />
-                }
-              />
+              <Route path="service-users">
+                <Route index element={<ServiceUserListPage />} />
+                <Route path="new" element={<ServiceUserCreatePage />} />
+                <Route path=":id" element={<ServiceUserDetailPage />} />
+                <Route path=":id/edit" element={<ServiceUserEditPage />} />
+              </Route>
               <Route
                 path={ROUTES.CARE_LOGS}
                 element={

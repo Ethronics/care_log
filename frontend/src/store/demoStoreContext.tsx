@@ -10,14 +10,20 @@ import {
 import { STORAGE_KEYS } from '../utils/constants'
 import { DEFAULT_DEMO_STORE, type DemoStore } from '../types/demoStore'
 import type { Staff, StaffCreateInput } from '../types/staff'
+import type { ServiceUser, ServiceUserCreateInput } from '../types/serviceUser'
 import { getSeedStore } from '../data/seed'
 
 function loadStore(): DemoStore {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.DEMO_DATA)
     if (raw) {
-      const parsed = JSON.parse(raw) as DemoStore
-      if (Array.isArray(parsed.staff)) return parsed
+      const parsed = JSON.parse(raw) as Partial<DemoStore>
+      if (Array.isArray(parsed.staff)) {
+        return {
+          staff: parsed.staff,
+          serviceUsers: Array.isArray(parsed.serviceUsers) ? parsed.serviceUsers : [],
+        }
+      }
     }
   } catch {
     // ignore
@@ -33,8 +39,8 @@ function saveStore(store: DemoStore): void {
   }
 }
 
-function generateId(): string {
-  return `staff-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+function generateId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
 interface DemoStoreContextValue extends DemoStore {
@@ -45,6 +51,13 @@ interface DemoStoreContextValue extends DemoStore {
   updateStaff: (id: string, input: Partial<Staff>) => Staff | undefined
   deactivateStaff: (id: string) => Staff | undefined
   reactivateStaff: (id: string) => Staff | undefined
+  // Service users
+  getServiceUser: (id: string) => ServiceUser | undefined
+  getServiceUserList: (options?: { includeInactive?: boolean }) => ServiceUser[]
+  searchServiceUsers: (query: string) => ServiceUser[]
+  addServiceUser: (input: ServiceUserCreateInput) => ServiceUser
+  updateServiceUser: (id: string, input: Partial<ServiceUser>) => ServiceUser | undefined
+  deactivateServiceUser: (id: string) => ServiceUser | undefined
 }
 
 const DemoStoreContext = createContext<DemoStoreContextValue | null>(null)
@@ -77,7 +90,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
   const addStaff = useCallback((input: StaffCreateInput): Staff => {
     const now = new Date().toISOString()
     const staff: Staff = {
-      id: generateId(),
+      id: generateId('staff'),
       name: input.name,
       email: input.email,
       phone: input.phone ?? '',
@@ -119,6 +132,84 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     return updateStaff(id, { isActive: true })
   }, [updateStaff])
 
+  const getServiceUser = useCallback(
+    (id: string) => store.serviceUsers.find((u) => u.id === id),
+    [store.serviceUsers]
+  )
+
+  const getServiceUserList = useCallback(
+    (options?: { includeInactive?: boolean }) => {
+      let list = [...store.serviceUsers]
+      if (options?.includeInactive !== true) {
+        list = list.filter((u) => u.isActive)
+      }
+      return list.sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
+    },
+    [store.serviceUsers]
+  )
+
+  const searchServiceUsers = useCallback(
+    (query: string): ServiceUser[] => {
+      const q = query.trim().toLowerCase()
+      if (!q) return getServiceUserList()
+      return getServiceUserList().filter(
+        (u) =>
+          u.name.toLowerCase().includes(q) ||
+          u.medicalInfo.toLowerCase().includes(q) ||
+          u.preferences.toLowerCase().includes(q)
+      )
+    },
+    [getServiceUserList]
+  )
+
+  const addServiceUser = useCallback((input: ServiceUserCreateInput): ServiceUser => {
+    const now = new Date().toISOString()
+    const serviceUser: ServiceUser = {
+      id: generateId('su'),
+      name: input.name,
+      dateOfBirth: input.dateOfBirth,
+      medicalInfo: input.medicalInfo ?? '',
+      emergencyContacts: input.emergencyContacts ?? [],
+      preferences: input.preferences ?? '',
+      isActive: input.isActive ?? true,
+      createdAt: now,
+      updatedAt: now,
+    }
+    setStore((prev) => ({ ...prev, serviceUsers: [...prev.serviceUsers, serviceUser] }))
+    return serviceUser
+  }, [])
+
+  const updateServiceUser = useCallback(
+    (id: string, input: Partial<ServiceUser>): ServiceUser | undefined => {
+      const existing = store.serviceUsers.find((u) => u.id === id)
+      if (!existing) return undefined
+      const now = new Date().toISOString()
+      const updated: ServiceUser = {
+        ...existing,
+        ...input,
+        id: existing.id,
+        createdAt: existing.createdAt,
+        updatedAt: now,
+      }
+      setStore((prev) => {
+        const index = prev.serviceUsers.findIndex((u) => u.id === id)
+        if (index === -1) return prev
+        const next = [...prev.serviceUsers]
+        next[index] = updated
+        return { ...prev, serviceUsers: next }
+      })
+      return updated
+    },
+    [store.serviceUsers]
+  )
+
+  const deactivateServiceUser = useCallback(
+    (id: string): ServiceUser | undefined => updateServiceUser(id, { isActive: false }),
+    [updateServiceUser]
+  )
+
   const value = useMemo<DemoStoreContextValue>(
     () => ({
       ...store,
@@ -128,6 +219,12 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       updateStaff,
       deactivateStaff,
       reactivateStaff,
+      getServiceUser,
+      getServiceUserList,
+      searchServiceUsers,
+      addServiceUser,
+      updateServiceUser,
+      deactivateServiceUser,
     }),
     [
       store,
@@ -137,6 +234,12 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       updateStaff,
       deactivateStaff,
       reactivateStaff,
+      getServiceUser,
+      getServiceUserList,
+      searchServiceUsers,
+      addServiceUser,
+      updateServiceUser,
+      deactivateServiceUser,
     ]
   )
 

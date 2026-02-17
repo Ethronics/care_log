@@ -33,4 +33,11 @@ export const ROUTES_STAFF = {
   EDIT: (id: string) => `/staff/${id}/edit`,
 } as const
 
+export const ROUTES_SERVICE_USERS = {
+  LIST: '/service-users',
+  NEW: '/service-users/new',
+  EDIT: (id: string) => `/service-users/${id}/edit`,
+  DETAIL: (id: string) => `/service-users/${id}`,
+} as const
+
 export type ThemeMode = 'light' | 'dark'
