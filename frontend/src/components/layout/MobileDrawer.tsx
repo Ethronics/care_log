@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { getRole } from '../../utils/auth'
-import { getNavItemsForRole } from '../../utils/navConfig'
+import { getNavItemsForRole, getProfileNavItem } from '../../utils/navConfig'
 import styles from './MobileDrawer.module.css'
 
 interface MobileDrawerProps {
@@ -11,7 +11,9 @@ interface MobileDrawerProps {
 
 export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const location = useLocation()
-  const navItems = getNavItemsForRole(getRole())
+  const role = getRole()
+  const navItems = getNavItemsForRole(role)
+  const profileItem = getProfileNavItem(role)
 
   useEffect(() => {
     onClose()
@@ -57,6 +59,16 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                 </Link>
               </li>
             ))}
+            {profileItem && (
+              <li key={profileItem.to} className={styles.profileItem}>
+                <Link
+                  to={profileItem.to}
+                  className={`${styles.link} ${location.pathname === profileItem.to ? styles.active : ''}`}
+                >
+                  {profileItem.label}
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       </aside>

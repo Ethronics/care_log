@@ -121,6 +121,20 @@
   gap: var(--space-2);
 }
 
+.profileLink {
+  color: var(--color-text);
+  text-decoration: none;
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.profileLink:hover {
+  color: var(--color-primary-700);
+  background-color: var(--color-bg-muted);
+}
+
 .roleBadge {
   display: none;
 }
@@ -152,4 +166,9 @@
 .themeToggle:focus-visible {
   outline: 2px solid var(--color-primary-500);
   outline-offset: 2px;
+}
+
+.themeIcon {
+  width: 22px;
+  height: 22px;
 }

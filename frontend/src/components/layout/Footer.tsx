@@ -7,7 +7,7 @@ export function Footer() {
     <footer className={styles.footer} role="contentinfo">
       <div className={styles.inner}>
         <p className={styles.copyright}>
-          © {year} Log My Care – Smart Edition. All rights reserved.
+          © {year} carePro. All rights reserved.
         </p>
       </div>
     </footer>

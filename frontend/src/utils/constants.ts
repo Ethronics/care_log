@@ -11,6 +11,12 @@ export const ROUTES = {
   SERVICE_USERS: '/service-users',
   CARE_LOGS: '/care-logs',
   ABSENCES: '/absences',
+  PROFILE: '/profile',
+} as const
+
+export const ROUTES_PROFILE = {
+  VIEW: '/profile',
+  EDIT: '/profile/edit',
 } as const
 
 export const ROLES = {
@@ -25,6 +31,7 @@ export const STORAGE_KEYS = {
   USER: 'user',
   THEME: 'care_log_theme',
   DEMO_DATA: 'care_log_demo_data',
+  SIDEBAR_COLLAPSED: 'care_log_sidebar_collapsed',
 } as const
 
 export const ROUTES_STAFF = {

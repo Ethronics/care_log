@@ -26,6 +26,7 @@ import {
 } from './pages/rota'
 import { CareLogsListPage, CareLogEditPage } from './pages/careLogs'
 import { AbsencesPage } from './pages/absences'
+import { ProfilePage, ProfileEditPage } from './pages/profile'
 import { ROUTES, ROLES } from './utils/constants'
 import './App.css'
 
@@ -90,6 +91,8 @@ function App() {
                 <Route path=":id/edit" element={<CareLogEditPage />} />
               </Route>
               <Route path={ROUTES.ABSENCES} element={<AbsencesPage />} />
+              <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+              <Route path="/profile/edit" element={<ProfileEditPage />} />
             </Route>
             <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
           </Routes>

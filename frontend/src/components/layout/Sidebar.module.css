@@ -3,12 +3,82 @@
   flex-shrink: 0;
   background-color: var(--color-bg-elevated);
   border-right: 1px solid var(--color-border);
-  padding: var(--space-4) 0;
+  padding: var(--space-2) 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.2s ease;
+}
+
+.sidebar.collapsed {
+  width: 64px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.collapseTop {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sidebar.collapsed .collapseTop {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.collapseBtn {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.sidebar.collapsed .collapseBtn {
+  padding: 0;
+}
+
+.collapseBtn:hover {
+  background-color: var(--color-bg-muted);
+  color: var(--color-primary-600);
+}
+
+.collapseBtn:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+.collapseLabel {
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .collapseLabel {
+  display: none;
+}
+
+.collapseIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .nav {
-  padding: 0 var(--space-2);
+  flex: 1;
+  padding: var(--space-2) var(--space-2) 0;
+}
+
+.sidebar.collapsed .nav {
+  padding: var(--space-2);
 }
 
 .list {
@@ -22,7 +92,9 @@
 }
 
 .link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   color: var(--color-text);
   text-decoration: none;
@@ -30,8 +102,12 @@
   font-weight: var(--font-medium);
   font-size: var(--text-sm);
   min-height: 44px;
-  display: flex;
-  align-items: center;
+  border-left: 3px solid transparent;
+}
+
+.sidebar.collapsed .link {
+  padding: var(--space-3);
+  justify-content: center;
 }
 
 .link:hover {
@@ -40,13 +116,43 @@
 }
 
 .link.active {
-  background-color: var(--color-primary-50);
-  color: var(--color-primary-700);
+  background-color: var(--color-bg-muted);
+  color: var(--color-primary-600);
+  border-left-color: var(--color-primary-500);
 }
 
 .link:focus-visible {
   outline: 2px solid var(--color-primary-500);
   outline-offset: 2px;
+}
+
+.iconWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+}
+
+.label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profileSection {
+  flex-shrink: 0;
+  padding: var(--space-2);
+  margin-top: auto;
+  border-top: 1px solid var(--color-border);
+}
+
+.sidebar.collapsed .profileSection {
+  padding: var(--space-2);
 }
 
 @media (max-width: 767px) {

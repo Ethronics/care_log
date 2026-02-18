@@ -6,7 +6,7 @@ export function HomePage() {
   return (
     <div className="container">
       <h1 className="page-title">
-        Welcome to Log My Care
+        Welcome to carePro
       </h1>
       <p className="body-text text-muted" style={{ marginBottom: 'var(--space-6)' }}>
         Smart Edition – Less paperwork, more care.
