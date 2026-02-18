@@ -1,7 +1,8 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { BreadcrumbProvider } from './contexts/BreadcrumbContext'
 import { DemoStoreProvider } from './store/demoStoreContext'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { MainLayout } from './components/layout'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { RoleGuard } from './components/auth/RoleGuard'
@@ -9,6 +10,7 @@ import {
   HomePage,
   LoginPage,
   DashboardPage,
+  NotFoundPage,
   PlaceholderPage,
 } from './pages'
 import { StaffListPage, StaffCreatePage, StaffEditPage } from './pages/staff'
@@ -35,6 +37,7 @@ function App() {
     <ThemeProvider>
       <DemoStoreProvider>
         <Router>
+          <ErrorBoundary>
           <BreadcrumbProvider>
           <Routes>
             <Route path={ROUTES.HOME} element={<HomePage />} />
@@ -94,9 +97,10 @@ function App() {
               <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
               <Route path="/profile/edit" element={<ProfileEditPage />} />
             </Route>
-            <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </BreadcrumbProvider>
+          </ErrorBoundary>
         </Router>
       </DemoStoreProvider>
     </ThemeProvider>

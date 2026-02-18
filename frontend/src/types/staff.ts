@@ -11,6 +11,10 @@ export interface Staff {
   trainingExpiryDate?: string | null
   /** Contracted hours per week for fairness / overtime scoring in Auto-Fill. */
   contractedHoursPerWeek?: number | null
+  /** DBS check valid until (YYYY-MM-DD). */
+  dbsCheckExpiry?: string | null
+  /** Safeguarding training completed on (YYYY-MM-DD). */
+  safeguardingCompletedDate?: string | null
   createdAt: string // ISO
   updatedAt: string // ISO
 }

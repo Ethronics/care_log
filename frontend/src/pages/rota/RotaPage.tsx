@@ -6,6 +6,7 @@ import { useDemoStore } from '../../store/demoStoreContext'
 import { getUser } from '../../utils/auth'
 import { ROUTES, ROUTES_ROTA, ROLES } from '../../utils/constants'
 import { Button, Card, Badge } from '../../components/ui'
+import { IconUserPlus } from '../../components/icons'
 import { getWeekRange, formatWeekLabel, addWeek, getWeekDays, formatDayShort } from './weekUtils'
 import { ABSENCE_STATUS } from '../../types/absence'
 import styles from './RotaPage.module.css'
@@ -292,8 +293,15 @@ function AssignDropdown({ shift }: { shift: import('../../types/shift').Shift })
 
   return (
     <div className={styles.dropdownWrap} ref={buttonRef}>
-      <Button variant="ghost" size="sm" onClick={handleToggle} type="button">
-        {shift.staffId ? 'Change' : 'Assign'}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleToggle}
+        type="button"
+        aria-label={shift.staffId ? 'Change assignment' : 'Assign staff'}
+        title={shift.staffId ? 'Change' : 'Assign'}
+      >
+        <IconUserPlus style={{ width: 18, height: 18 }} />
       </Button>
       {open &&
         typeof document !== 'undefined' &&

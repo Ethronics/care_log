@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BarChart,
@@ -57,6 +57,7 @@ export function DashboardPage() {
   const isAdmin = user?.role === ROLES.ADMIN
   const currentStaffId = store.getStaffList().find((s) => s.email === user?.email)?.id ?? null
   const importInputRef = useRef<HTMLInputElement>(null)
+  const [isImporting, setIsImporting] = useState(false)
 
   const today = todayISO()
   const todayEnd = today
@@ -154,9 +155,10 @@ export function DashboardPage() {
           <Button
             variant="secondary"
             size="sm"
+            disabled={isImporting}
             onClick={() => importInputRef.current?.click()}
           >
-            Import data (JSON)
+            {isImporting ? 'Importing…' : 'Import data (JSON)'}
           </Button>
           <Button variant="secondary" size="sm" onClick={() => store.resetToDemoData()}>
             Reset to demo data
@@ -169,7 +171,8 @@ export function DashboardPage() {
             onChange={(e) => {
               const file = e.target.files?.[0]
               if (file) {
-                store.importDataFromJson(file)
+                setIsImporting(true)
+                store.importDataFromJson(file).finally(() => setIsImporting(false))
                 e.target.value = ''
               }
             }}

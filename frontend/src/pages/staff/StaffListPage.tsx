@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useBreadcrumbs } from '../../contexts/BreadcrumbContext'
 import { useDemoStore } from '../../store/demoStoreContext'
 import { ROUTES, ROUTES_STAFF, ROLES } from '../../utils/constants'
-import { Button, Badge, Card, ConfirmDialog } from '../../components/ui'
+import { Button, Badge, Card, ConfirmDialog, EmptyState } from '../../components/ui'
 import styles from './StaffListPage.module.css'
 
 export function StaffListPage() {
@@ -41,17 +41,15 @@ export function StaffListPage() {
 
       {staff.length === 0 ? (
         <Card className={styles.emptyCard}>
-          <div className={styles.emptyContent}>
-            <p className={styles.emptyTitle}>No staff yet</p>
-            <p className="text-muted text-sm">
-              Add your first team member to get started.
-            </p>
-            <Link to={ROUTES_STAFF.NEW}>
-              <Button variant="primary" className={styles.emptyButton}>
-                Add staff
-              </Button>
-            </Link>
-          </div>
+          <EmptyState
+            title="No staff yet"
+            description="Add your first team member to get started."
+            action={
+              <Link to={ROUTES_STAFF.NEW}>
+                <Button variant="primary">Add staff</Button>
+              </Link>
+            }
+          />
         </Card>
       ) : (
         <>

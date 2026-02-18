@@ -149,6 +149,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       isActive: input.isActive ?? true,
       trainingExpiryDate: input.trainingExpiryDate ?? undefined,
       contractedHoursPerWeek: input.contractedHoursPerWeek ?? undefined,
+      dbsCheckExpiry: input.dbsCheckExpiry ?? undefined,
+      safeguardingCompletedDate: input.safeguardingCompletedDate ?? undefined,
       createdAt: now,
       updatedAt: now,
     }
