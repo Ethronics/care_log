@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { useBreadcrumbs } from '../../contexts/BreadcrumbContext'
 import { useDemoStore } from '../../store/demoStoreContext'
@@ -6,6 +7,7 @@ import { getUser } from '../../utils/auth'
 import { ROUTES, ROUTES_ROTA, ROLES } from '../../utils/constants'
 import { Button, Card, Badge } from '../../components/ui'
 import { getWeekRange, formatWeekLabel, addWeek, getWeekDays, formatDayShort } from './weekUtils'
+import { ABSENCE_STATUS } from '../../types/absence'
 import styles from './RotaPage.module.css'
 
 export function RotaPage() {
@@ -40,6 +42,25 @@ export function RotaPage() {
   }, [weekStart])
 
   const unassignedThisWeek = shifts.filter((s) => !s.staffId).length
+
+  const approvedAbsences = store.absences.filter((a) => a.status === ABSENCE_STATUS.APPROVED)
+  const activeStaff = store.getStaffList()
+  const isOnLeave = (staffId: string, date: string) =>
+    approvedAbsences.some((a) => a.staffId === staffId && a.startDate <= date && a.endDate >= date)
+  const isTrainingValidForDate = (staff: { trainingExpiryDate?: string | null }, date: string) => {
+    const exp = staff.trainingExpiryDate
+    if (!exp) return true
+    return date <= exp
+  }
+  const staffOnLeaveThisWeek = approvedAbsences.filter((a) =>
+    weekDays.some((d) => a.startDate <= d && a.endDate >= d)
+  )
+  const excludedTraining = activeStaff.filter((s) => !isTrainingValidForDate(s, from))
+  const eligibleStaff = activeStaff.filter(
+    (s) =>
+      isTrainingValidForDate(s, from) &&
+      !weekDays.some((d) => isOnLeave(s.id, d))
+  )
 
   const shiftsByDate = weekDays.reduce((acc, day) => {
     acc[day] = shifts.filter((s) => s.date === day)
@@ -78,25 +99,93 @@ export function RotaPage() {
           </div>
         )}
       </div>
-      {isAdmin && unassignCount !== null && unassignCount > 0 && (
-        <p className="body-text text-muted" style={{ marginBottom: 'var(--space-2)' }}>
-          Unassigned {unassignCount} shift(s). Click <strong>Auto-Fill</strong> to assign staff automatically.
+      {isAdmin && (
+        <p className={styles.intro}>
+          {unassignedThisWeek > 0
+            ? `${unassignedThisWeek} shift(s) need assignment. Use Auto-Fill or pick staff per shift.`
+            : 'All shifts assigned. Add shifts or change assignments below.'}
         </p>
       )}
-      {isAdmin && autoFillResult && (
-        <p className="body-text text-muted" style={{ marginBottom: 'var(--space-2)' }}>
-          {autoFillResult.assigned > 0 && `Assigned ${autoFillResult.assigned} shift(s). `}
-          {autoFillResult.skipped > 0 && `${autoFillResult.skipped} shift(s) had no available staff.`}
-          {autoFillResult.assigned === 0 && autoFillResult.skipped === 0 && 'No unassigned shifts this week.'}
-        </p>
+      {!isAdmin && (
+        <p className={styles.intro}>Your shifts for this week.</p>
       )}
-      <p className="body-text text-muted" style={{ marginBottom: 'var(--space-4)' }}>
-        {isAdmin
-          ? unassignedThisWeek > 0
-            ? `${unassignedThisWeek} unassigned shift(s) this week. Use Auto-Fill or assign manually.`
-            : 'Schedule and assign shifts. Drag or use assign to allocate staff.'
-          : 'Your upcoming shifts for this week.'}
-      </p>
+
+      {isAdmin && (unassignCount !== null && unassignCount > 0) && (
+        <div className={styles.resultBanner} role="status">
+          <span className={styles.resultText}>
+            {unassignCount} shift(s) unassigned. Click <strong>Auto-Fill</strong> to assign.
+          </span>
+        </div>
+      )}
+      {isAdmin && autoFillResult && (autoFillResult.assigned > 0 || autoFillResult.skipped > 0) && (
+        <div
+          className={`${styles.resultBanner} ${autoFillResult.skipped > 0 ? styles.resultBannerWarning : styles.resultBannerSuccess}`}
+          role="status"
+        >
+          <span className={styles.resultText}>
+            {autoFillResult.assigned > 0 && `Assigned ${autoFillResult.assigned} shift(s).`}
+            {autoFillResult.skipped > 0 && ` ${autoFillResult.skipped} skipped (no eligible staff or overlap).`}
+          </span>
+        </div>
+      )}
+
+      {isAdmin && (
+        <div className={styles.eligibilityStrip}>
+          <span className={styles.eligibilityTitle}>Who Auto-Fill can assign</span>
+          <div className={styles.eligibilityBadges}>
+            <span className={styles.eligibilityBadgeSuccess}>
+              {eligibleStaff.length} eligible
+            </span>
+            {staffOnLeaveThisWeek.length > 0 && (
+              <span className={styles.eligibilityBadgeLeave}>
+                {staffOnLeaveThisWeek.length} on leave
+              </span>
+            )}
+            {excludedTraining.length > 0 && (
+              <span className={styles.eligibilityBadgeTraining}>
+                {excludedTraining.length} training expired
+              </span>
+            )}
+          </div>
+          <details className={styles.eligibilityDetails}>
+            <summary>See names</summary>
+            <div className={styles.eligibilityGrid}>
+              <div>
+                <span className={styles.eligibilityLabel}>Eligible</span>
+                <ul className={styles.eligibilityList}>
+                  {eligibleStaff.map((s) => (
+                    <li key={s.id}>{s.name}</li>
+                  ))}
+                  {eligibleStaff.length === 0 && <li className="text-muted">None</li>}
+                </ul>
+              </div>
+              <div>
+                <span className={styles.eligibilityLabel}>On leave this week</span>
+                <ul className={styles.eligibilityList}>
+                  {staffOnLeaveThisWeek.map((a) => {
+                    const s = store.getStaff(a.staffId)
+                    return (
+                      <li key={a.id}>
+                        {s?.name} ({a.startDate} – {a.endDate})
+                      </li>
+                    )
+                  })}
+                  {staffOnLeaveThisWeek.length === 0 && <li className="text-muted">None</li>}
+                </ul>
+              </div>
+              <div>
+                <span className={styles.eligibilityLabel}>Training expired</span>
+                <ul className={styles.eligibilityList}>
+                  {excludedTraining.map((s) => (
+                    <li key={s.id}>{s.name}</li>
+                  ))}
+                  {excludedTraining.length === 0 && <li className="text-muted">None</li>}
+                </ul>
+              </div>
+            </div>
+          </details>
+        </div>
+      )}
 
       <div className={styles.weekNav}>
         <Button variant="ghost" size="sm" onClick={() => setWeekStart(addWeek(from, -1))}>
@@ -189,43 +278,70 @@ function ShiftCard({
 function AssignDropdown({ shift }: { shift: import('../../types/shift').Shift }) {
   const store = useDemoStore()
   const [open, setOpen] = useState(false)
+  const [position, setPosition] = useState({ top: 0, left: 0 })
+  const buttonRef = useRef<HTMLDivElement>(null)
   const staffList = store.getStaffList()
 
+  const handleToggle = () => {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setPosition({ top: rect.bottom + 4, left: rect.left })
+    }
+    setOpen((o) => !o)
+  }
+
   return (
-    <div className={styles.dropdownWrap}>
-      <Button variant="ghost" size="sm" onClick={() => setOpen((o) => !o)}>
+    <div className={styles.dropdownWrap} ref={buttonRef}>
+      <Button variant="ghost" size="sm" onClick={handleToggle} type="button">
         {shift.staffId ? 'Change' : 'Assign'}
       </Button>
-      {open && (
-        <>
-          <div className={styles.dropdownBackdrop} onClick={() => setOpen(false)} />
-          <div className={styles.dropdown}>
-            <button
-              type="button"
-              className={styles.dropdownItem}
-              onClick={() => {
-                store.unassignShift(shift.id)
-                setOpen(false)
+      {open &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <>
+            <div
+              className={styles.dropdownBackdrop}
+              onClick={() => setOpen(false)}
+              aria-hidden
+            />
+            <div
+              className={styles.dropdown}
+              style={{
+                position: 'fixed',
+                top: position.top,
+                left: position.left,
+                marginTop: 0,
               }}
+              role="listbox"
+              aria-label="Assign staff"
             >
-              Unassign
-            </button>
-            {staffList.map((s) => (
               <button
-                key={s.id}
                 type="button"
                 className={styles.dropdownItem}
                 onClick={() => {
-                  store.assignShift(shift.id, s.id)
+                  store.unassignShift(shift.id)
                   setOpen(false)
                 }}
               >
-                {s.name}
+                Unassign
               </button>
-            ))}
-          </div>
-        </>
-      )}
+              {staffList.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className={styles.dropdownItem}
+                  onClick={() => {
+                    store.assignShift(shift.id, s.id)
+                    setOpen(false)
+                  }}
+                >
+                  {s.name}
+                </button>
+              ))}
+            </div>
+          </>,
+          document.body
+        )}
     </div>
   )
 }

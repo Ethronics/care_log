@@ -30,6 +30,10 @@ export function StaffCreatePage() {
         email: values.email.trim(),
         phone: values.phone.trim(),
         role: values.role,
+        trainingExpiryDate: values.trainingExpiryDate.trim() || undefined,
+        contractedHoursPerWeek: values.contractedHoursPerWeek.trim()
+          ? Number(values.contractedHoursPerWeek)
+          : undefined,
       })
       navigate(ROUTES_STAFF.EDIT(staff.id))
     } finally {

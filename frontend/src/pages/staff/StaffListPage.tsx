@@ -12,6 +12,12 @@ export function StaffListPage() {
   const [deactivateId, setDeactivateId] = useState<string | null>(null)
 
   const staff = getStaffList({ includeInactive: false })
+  const today = new Date().toISOString().slice(0, 10)
+  const trainingStatus = (s: { trainingExpiryDate?: string | null }) => {
+    const exp = s.trainingExpiryDate
+    if (!exp) return '—'
+    return exp < today ? 'Expired' : `Valid until ${new Date(exp + 'T12:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}`
+  }
 
   useEffect(() => {
     setItems([
@@ -57,6 +63,8 @@ export function StaffListPage() {
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Role</th>
+                  <th>Training</th>
+                  <th>Hours</th>
                   <th className={styles.actionsCell}>Actions</th>
                 </tr>
               </thead>
@@ -73,6 +81,12 @@ export function StaffListPage() {
                         {s.role === ROLES.ADMIN ? 'Admin' : 'Staff'}
                       </Badge>
                     </td>
+                    <td>
+                      <span className={trainingStatus(s) === 'Expired' ? styles.trainingExpired : ''}>
+                        {trainingStatus(s)}
+                      </span>
+                    </td>
+                    <td>{s.contractedHoursPerWeek != null ? `${s.contractedHoursPerWeek} h/wk` : '—'}</td>
                     <td className={styles.actionsCell}>
                       <Link to={ROUTES_STAFF.EDIT(s.id)} className={styles.link}>
                         Edit
@@ -98,6 +112,10 @@ export function StaffListPage() {
                 {s.phone && (
                   <div className="text-sm text-muted">{s.phone}</div>
                 )}
+                <div className="text-sm text-muted">
+                  Training: {trainingStatus(s)}
+                  {s.contractedHoursPerWeek != null && ` · ${s.contractedHoursPerWeek} h/wk`}
+                </div>
                 <Badge
                   variant={s.role === ROLES.ADMIN ? 'info' : 'default'}
                   className={styles.cardBadge}

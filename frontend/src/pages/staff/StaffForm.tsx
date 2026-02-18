@@ -9,6 +9,8 @@ export interface StaffFormValues {
   email: string
   phone: string
   role: Role
+  trainingExpiryDate: string
+  contractedHoursPerWeek: string
 }
 
 const emptyValues: StaffFormValues = {
@@ -16,6 +18,8 @@ const emptyValues: StaffFormValues = {
   email: '',
   phone: '',
   role: ROLES.STAFF,
+  trainingExpiryDate: '',
+  contractedHoursPerWeek: '',
 }
 
 interface StaffFormProps {
@@ -51,6 +55,11 @@ export function StaffForm({
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Please enter a valid email address.')
+      return
+    }
+    const contracted = values.contractedHoursPerWeek.trim()
+    if (contracted && (Number.isNaN(Number(contracted)) || Number(contracted) < 0)) {
+      setError('Contracted hours must be a non-negative number.')
       return
     }
     onSubmit(values)
@@ -102,6 +111,23 @@ export function StaffForm({
           <option value={ROLES.STAFF}>Staff</option>
         </select>
       </div>
+      <Input
+        type="date"
+        label="Training valid until (optional)"
+        value={values.trainingExpiryDate}
+        onChange={(e) => setValues((v) => ({ ...v, trainingExpiryDate: e.target.value }))}
+        hint="Auto-Fill excludes staff when shift date is after this."
+      />
+      <Input
+        type="number"
+        label="Contracted hours per week (optional)"
+        value={values.contractedHoursPerWeek}
+        onChange={(e) => setValues((v) => ({ ...v, contractedHoursPerWeek: e.target.value }))}
+        placeholder="e.g. 40"
+        min={0}
+        step={1}
+        hint="Used by Auto-Fill for fairness and overtime avoidance."
+      />
       <div className={styles.actions}>
         <Button type="submit" variant="primary" disabled={isSubmitting}>
           {isSubmitting ? 'Saving…' : submitLabel}
@@ -117,5 +143,7 @@ export function staffToFormValues(s: Staff): StaffFormValues {
     email: s.email,
     phone: s.phone,
     role: s.role,
+    trainingExpiryDate: s.trainingExpiryDate ?? '',
+    contractedHoursPerWeek: s.contractedHoursPerWeek != null ? String(s.contractedHoursPerWeek) : '',
   }
 }

@@ -27,8 +27,11 @@ function addDays(dateStr: string, days: number): string {
 }
 
 const now = iso(0)
+const today = new Date().toISOString().slice(0, 10)
+const trainingExpired = addDays(today, -30)
+const trainingValid = addDays(today, 90)
 
-// --- Staff: 1 admin + 4 staff (one inactive to showcase deactivate) ---
+// --- Staff: 1 admin + 4 staff (one inactive). Training & contract for Auto-Fill. ---
 export function seedStaff(): Staff[] {
   return [
     {
@@ -38,6 +41,8 @@ export function seedStaff(): Staff[] {
       phone: '+44 7700 900001',
       role: ROLES.ADMIN,
       isActive: true,
+      trainingExpiryDate: trainingValid,
+      contractedHoursPerWeek: 40,
       createdAt: iso(30),
       updatedAt: now,
     },
@@ -48,6 +53,8 @@ export function seedStaff(): Staff[] {
       phone: '+44 7700 900002',
       role: ROLES.STAFF,
       isActive: true,
+      trainingExpiryDate: trainingValid,
+      contractedHoursPerWeek: 40,
       createdAt: iso(20),
       updatedAt: now,
     },
@@ -58,6 +65,8 @@ export function seedStaff(): Staff[] {
       phone: '+44 7700 900003',
       role: ROLES.STAFF,
       isActive: true,
+      trainingExpiryDate: trainingValid,
+      contractedHoursPerWeek: 35,
       createdAt: iso(10),
       updatedAt: now,
     },
@@ -68,6 +77,8 @@ export function seedStaff(): Staff[] {
       phone: '+44 7700 900004',
       role: ROLES.STAFF,
       isActive: true,
+      trainingExpiryDate: trainingExpired,
+      contractedHoursPerWeek: 40,
       createdAt: iso(10),
       updatedAt: now,
     },
@@ -78,6 +89,8 @@ export function seedStaff(): Staff[] {
       phone: '+44 7700 900005',
       role: ROLES.STAFF,
       isActive: false,
+      trainingExpiryDate: trainingValid,
+      contractedHoursPerWeek: 40,
       createdAt: iso(60),
       updatedAt: iso(5),
     },

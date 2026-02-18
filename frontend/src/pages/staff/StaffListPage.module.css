@@ -46,6 +46,11 @@
   color: var(--color-text);
 }
 
+.trainingExpired {
+  color: var(--color-error);
+  font-weight: var(--font-medium);
+}
+
 .actionsCell {
   white-space: nowrap;
 }

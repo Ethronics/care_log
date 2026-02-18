@@ -1,13 +1,16 @@
 .wrapper {
+  height: 100vh;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .body {
   flex: 1;
   display: flex;
   min-height: 0;
+  overflow: hidden;
 }
 
 .main {
@@ -16,6 +19,7 @@
   padding: var(--space-3);
   padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom, 0px));
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 @media (min-width: 480px) {

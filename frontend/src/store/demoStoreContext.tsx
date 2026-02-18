@@ -147,6 +147,8 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       phone: input.phone ?? '',
       role: input.role,
       isActive: input.isActive ?? true,
+      trainingExpiryDate: input.trainingExpiryDate ?? undefined,
+      contractedHoursPerWeek: input.contractedHoursPerWeek ?? undefined,
       createdAt: now,
       updatedAt: now,
     }
@@ -548,43 +550,120 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
 
   const autoFillRota = useCallback(
     (from: string, to: string): { assigned: number; skipped: number } => {
-      const shifts = store.shifts.filter(
+      const unassignedShifts = store.shifts.filter(
         (s) => s.date >= from && s.date <= to && !s.staffId
       )
-      if (shifts.length === 0) {
+      if (unassignedShifts.length === 0) {
         return { assigned: 0, skipped: 0 }
       }
       const approvedAbsences = store.absences.filter((a) => a.status === ABSENCE_STATUS.APPROVED)
-      const staffList = store.staff.filter((s) => s.isActive).sort((a, b) => a.id.localeCompare(b.id))
+      const staffList = store.staff.filter((s) => s.isActive)
+
       const isOnLeave = (staffId: string, date: string): boolean =>
         approvedAbsences.some(
           (a) => a.staffId === staffId && a.startDate <= date && a.endDate >= date
         )
-      const sortedShifts = [...shifts].sort(
+
+      const isTrainingValid = (staff: Staff, date: string): boolean => {
+        const exp = staff.trainingExpiryDate
+        if (!exp) return true
+        return date <= exp
+      }
+
+      const shiftDurationHours = (s: Shift): number => {
+        const [sh, sm] = s.startTime.split(':').map(Number)
+        const [eh, em] = s.endTime.split(':').map(Number)
+        return (eh * 60 + em - (sh * 60 + sm)) / 60
+      }
+
+      const timeToMins = (t: string): number => {
+        const [h, m] = t.split(':').map(Number)
+        return h * 60 + m
+      }
+      const overlaps = (a: Shift, b: Shift): boolean => {
+        if (a.date !== b.date) return false
+        const [aStart, aEnd] = [a.startTime, a.endTime].map(timeToMins)
+        const [bStart, bEnd] = [b.startTime, b.endTime].map(timeToMins)
+        return aStart < bEnd && aEnd > bStart
+      }
+
+      const sortedShifts = [...unassignedShifts].sort(
         (a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)
       )
-      let rotationIndex = 0
-      const assignments: { shiftId: string; staffId: string }[] = []
+
+      const assignments = new Map<string, string>()
+
       for (const shift of sortedShifts) {
-        const available = staffList.filter((s) => !isOnLeave(s.id, shift.date)).map((s) => s.id)
+        let available = staffList.filter(
+          (s) => !isOnLeave(s.id, shift.date) && isTrainingValid(s, shift.date)
+        )
         if (available.length === 0) continue
-        const staffId = available[rotationIndex % available.length]
-        assignments.push({ shiftId: shift.id, staffId })
-        rotationIndex++
+
+        const assignedShiftsInRange = store.shifts.filter(
+          (s) => s.date >= from && s.date <= to && s.staffId
+        )
+        const shiftsForStaffOnDate = (staffId: string, date: string): Shift[] => [
+          ...assignedShiftsInRange.filter((s) => s.staffId === staffId && s.date === date),
+          ...Array.from(assignments.entries())
+            .filter(([, sid]) => sid === staffId)
+            .map(([id]) => store.shifts.find((s) => s.id === id))
+            .filter((s): s is Shift => Boolean(s) && s.date === date),
+        ]
+        available = available.filter((s) => {
+          const onDate = shiftsForStaffOnDate(s.id, shift.date)
+          return !onDate.some((other) => overlaps(shift, other))
+        })
+        if (available.length === 0) continue
+
+        const hoursFor = (staffId: string): number => {
+          const shifts: Shift[] = [
+            ...assignedShiftsInRange.filter((s) => s.staffId === staffId),
+            ...Array.from(assignments.entries())
+              .filter(([, sid]) => sid === staffId)
+              .map(([shiftId]) => store.shifts.find((s) => s.id === shiftId))
+              .filter((s): s is Shift => Boolean(s)),
+          ]
+          return shifts.reduce((sum, s) => sum + shiftDurationHours(s), 0)
+        }
+        const shiftsCountFor = (staffId: string): number =>
+          assignedShiftsInRange.filter((s) => s.staffId === staffId).length +
+          Array.from(assignments.values()).filter((id) => id === staffId).length
+        const continuityFor = (staffId: string): number =>
+          [
+            ...assignedShiftsInRange.filter((s) => s.staffId === staffId && s.serviceUserId === shift.serviceUserId),
+            ...Array.from(assignments.entries())
+              .filter(([, sid]) => sid === staffId)
+              .map(([id]) => store.shifts.find((s) => s.id === id))
+              .filter((s): s is Shift => Boolean(s) && s.serviceUserId === shift.serviceUserId),
+          ].length
+
+        const contracted = (s: Staff) => s.contractedHoursPerWeek ?? 999
+        const maxShifts = Math.max(1, ...available.map((s) => shiftsCountFor(s.id)))
+
+        const scored = available.map((s) => {
+          const hours = hoursFor(s.id) + shiftDurationHours(shift)
+          const underHours = contracted(s) - hours >= 0 ? 25 : 0
+          const continuity = continuityFor(s.id) * 20
+          const fairness = (maxShifts - shiftsCountFor(s.id)) * 8
+          return { staffId: s.id, score: underHours + continuity + fairness }
+        })
+        scored.sort((a, b) => b.score - a.score)
+        assignments.set(shift.id, scored[0].staffId)
       }
-      if (assignments.length === 0) {
+
+      if (assignments.size === 0) {
         return { assigned: 0, skipped: sortedShifts.length }
       }
-      setStore((prev) => {
-        const byId = new Map(assignments.map((a) => [a.shiftId, a.staffId]))
-        return {
-          ...prev,
-          shifts: prev.shifts.map((s) =>
-            byId.has(s.id) ? { ...s, staffId: byId.get(s.id)!, updatedAt: new Date().toISOString() } : s
-          ),
-        }
-      })
-      return { assigned: assignments.length, skipped: sortedShifts.length - assignments.length }
+      const now = new Date().toISOString()
+      setStore((prev) => ({
+        ...prev,
+        shifts: prev.shifts.map((s) =>
+          assignments.has(s.id)
+            ? { ...s, staffId: assignments.get(s.id)!, updatedAt: now }
+            : s
+        ),
+      }))
+      return { assigned: assignments.size, skipped: sortedShifts.length - assignments.size }
     },
     [store.shifts, store.absences, store.staff]
   )

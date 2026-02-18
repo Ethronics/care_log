@@ -7,6 +7,10 @@ export interface Staff {
   phone: string
   role: Role
   isActive: boolean
+  /** Training valid until this date (YYYY-MM-DD). Staff excluded from Auto-Fill when shift date is after this. */
+  trainingExpiryDate?: string | null
+  /** Contracted hours per week for fairness / overtime scoring in Auto-Fill. */
+  contractedHoursPerWeek?: number | null
   createdAt: string // ISO
   updatedAt: string // ISO
 }
