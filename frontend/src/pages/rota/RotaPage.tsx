@@ -197,6 +197,11 @@ export function RotaPage() {
           Next →
         </Button>
       </div>
+      {shifts.length > 0 && (
+        <p className={styles.swipeHint} aria-hidden>
+          Swipe left or right for other days
+        </p>
+      )}
 
       {shifts.length === 0 ? (
         <Card className={styles.emptyCard}>

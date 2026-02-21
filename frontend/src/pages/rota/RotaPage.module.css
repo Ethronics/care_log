@@ -7,11 +7,24 @@
   margin-bottom: var(--space-2);
 }
 
+@media (max-width: 767px) {
+  .header {
+    margin-bottom: var(--space-3);
+  }
+}
+
 .headerActions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .headerActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 .intro {
@@ -20,12 +33,24 @@
   margin: 0 0 var(--space-3);
 }
 
+@media (max-width: 767px) {
+  .intro {
+    margin-bottom: var(--space-2);
+  }
+}
+
 .resultBanner {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-3);
   background: var(--color-bg-muted);
   border: 1px solid var(--color-border);
+}
+
+@media (max-width: 767px) {
+  .resultBanner {
+    margin-bottom: var(--space-2);
+  }
 }
 
 .resultBannerSuccess {
@@ -48,6 +73,13 @@
   background: var(--color-bg-muted);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+}
+
+@media (max-width: 767px) {
+  .eligibilityStrip {
+    margin-bottom: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+  }
 }
 
 .eligibilityTitle {
@@ -162,10 +194,47 @@
   flex-wrap: wrap;
 }
 
+@media (max-width: 767px) {
+  .weekNav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin: 0 calc(-1 * (var(--space-3) + env(safe-area-inset-left, 0px)));
+    margin-bottom: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    padding-left: calc(var(--space-3) + env(safe-area-inset-left, 0px));
+    padding-right: calc(var(--space-3) + env(safe-area-inset-right, 0px));
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 1px 0 var(--color-border);
+  }
+}
+
 .weekLabel {
   font-weight: var(--font-semibold);
   min-width: 200px;
   text-align: center;
+}
+
+@media (max-width: 767px) {
+  .weekLabel {
+    min-width: 140px;
+    font-size: var(--text-sm);
+  }
+}
+
+.swipeHint {
+  display: none;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-2);
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .swipeHint {
+    display: block;
+  }
 }
 
 .emptyCard {
@@ -183,6 +252,23 @@
   gap: var(--space-4);
 }
 
+/* Mobile: horizontal scroll by day – swipe left/right to see days, minimal vertical scroll */
+@media (max-width: 767px) {
+  .weekGrid {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: visible;
+    gap: var(--space-3);
+    padding-bottom: var(--space-2);
+    margin-left: calc(-1 * (var(--space-3) + env(safe-area-inset-left, 0px)));
+    margin-right: calc(-1 * (var(--space-3) + env(safe-area-inset-right, 0px)));
+    padding-left: calc(var(--space-3) + env(safe-area-inset-left, 0px));
+    padding-right: calc(var(--space-3) + env(safe-area-inset-right, 0px));
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+}
+
 @media (min-width: 768px) {
   .weekGrid {
     display: grid;
@@ -195,6 +281,15 @@
   min-width: 0;
 }
 
+@media (max-width: 767px) {
+  .dayColumn {
+    min-width: 200px;
+    max-width: 200px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+}
+
 .dayHeader {
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
@@ -204,10 +299,24 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+@media (max-width: 767px) {
+  .dayHeader {
+    font-size: var(--text-xs);
+    margin-bottom: var(--space-1);
+    padding-bottom: var(--space-1);
+  }
+}
+
 .shifts {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .shifts {
+    gap: var(--space-1);
+  }
 }
 
 .shiftCard {
@@ -216,10 +325,22 @@
   gap: var(--space-1);
 }
 
+@media (max-width: 767px) {
+  .shiftCard {
+    gap: 2px;
+  }
+}
+
 .shiftTime {
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
   color: var(--color-text);
+}
+
+@media (max-width: 767px) {
+  .shiftTime {
+    font-size: var(--text-xs);
+  }
 }
 
 .shiftServiceUser {
@@ -227,8 +348,20 @@
   color: var(--color-primary-700);
 }
 
+@media (max-width: 767px) {
+  .shiftServiceUser {
+    font-size: var(--text-xs);
+  }
+}
+
 .shiftStaff {
   margin-top: var(--space-1);
+}
+
+@media (max-width: 767px) {
+  .shiftStaff {
+    margin-top: 2px;
+  }
 }
 
 .shiftActions {
@@ -236,6 +369,13 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .shiftActions {
+    margin-top: var(--space-1);
+    gap: var(--space-1);
+  }
 }
 
 .link {
