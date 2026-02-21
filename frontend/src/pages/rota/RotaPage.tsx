@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useBreadcrumbs } from '../../contexts/BreadcrumbContext'
 import { useDemoStore } from '../../store/demoStoreContext'
 import { getUser } from '../../utils/auth'
-import { ROUTES, ROUTES_ROTA, ROLES } from '../../utils/constants'
+import { ROUTES, ROUTES_ROTA, ROLES, STORAGE_KEYS } from '../../utils/constants'
 import { Button, Card, Badge, Input } from '../../components/ui'
 import { IconUserPlus } from '../../components/icons'
 import { getWeekRange, formatWeekLabel, addWeek, getWeekDays, formatDayShort } from './weekUtils'
@@ -20,8 +20,16 @@ export function RotaPage() {
     ? null
     : store.getStaffList().find((s) => s.email === user?.email)?.id ?? null
 
-  const [weekStart, setWeekStart] = useState(() => getWeekRange(new Date()).from)
-  const [staffFilter, setStaffFilter] = useState('')
+  const [weekStart, setWeekStart] = useState(() => {
+    if (typeof sessionStorage === 'undefined') return getWeekRange(new Date()).from
+    const saved = sessionStorage.getItem(STORAGE_KEYS.ROTA_WEEK_START)
+    if (saved && /^\d{4}-\d{2}-\d{2}$/.test(saved)) return saved
+    return getWeekRange(new Date()).from
+  })
+  const [staffFilter, setStaffFilter] = useState(() => {
+    if (typeof sessionStorage === 'undefined') return ''
+    return sessionStorage.getItem(STORAGE_KEYS.ROTA_STAFF_FILTER) ?? ''
+  })
   const [autoFillResult, setAutoFillResult] = useState<{ assigned: number; skipped: number } | null>(null)
   const [unassignCount, setUnassignCount] = useState<number | null>(null)
   const { from, to } = getWeekRange(new Date(weekStart + 'T12:00:00'))
@@ -50,6 +58,16 @@ export function RotaPage() {
     setAutoFillResult(null)
     setUnassignCount(null)
   }, [weekStart])
+
+  useEffect(() => {
+    if (typeof sessionStorage === 'undefined') return
+    sessionStorage.setItem(STORAGE_KEYS.ROTA_WEEK_START, weekStart)
+  }, [weekStart])
+
+  useEffect(() => {
+    if (typeof sessionStorage === 'undefined' || !isAdmin) return
+    sessionStorage.setItem(STORAGE_KEYS.ROTA_STAFF_FILTER, staffFilter)
+  }, [isAdmin, staffFilter])
 
   const unassignedThisWeek = allShifts.filter((s) => !s.staffId).length
 
@@ -121,9 +139,19 @@ export function RotaPage() {
             aria-label="Filter rota by carer name"
           />
           {staffFilter.trim() && (
-            <span className={styles.filterHint}>
-              Showing shifts for carers matching &quot;{staffFilter.trim()}&quot; and unassigned shifts
-            </span>
+            <>
+              <span className={styles.filterHint}>
+                Showing shifts for carers matching &quot;{staffFilter.trim()}&quot; and unassigned shifts
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setStaffFilter('')}
+                type="button"
+              >
+                Clear filter
+              </Button>
+            </>
           )}
         </div>
       )}
@@ -215,28 +243,6 @@ export function RotaPage() {
         </div>
       )}
 
-      {isAdmin && (
-        <div className={styles.carerFilter}>
-          <label htmlFor="carer-search" className={styles.carerFilterLabel}>
-            Filter by carer name
-          </label>
-          <Input
-            id="carer-search"
-            type="search"
-            placeholder="Search by name..."
-            value={staffFilter}
-            onChange={(e) => setStaffFilter(e.target.value)}
-            className={styles.carerFilterInput}
-            aria-describedby={staffFilter.trim() ? 'carer-filter-active' : undefined}
-          />
-          {staffFilter.trim() && (
-            <span id="carer-filter-active" className="text-sm text-muted" aria-live="polite">
-              Showing only shifts assigned to carers matching &quot;{staffFilter.trim()}&quot;
-            </span>
-          )}
-        </div>
-      )}
-
       <div className={styles.weekNav}>
         <Button variant="ghost" size="sm" onClick={() => setWeekStart(addWeek(from, -1))}>
           ← Previous
@@ -245,6 +251,16 @@ export function RotaPage() {
         <Button variant="ghost" size="sm" onClick={() => setWeekStart(addWeek(from, 1))}>
           Next →
         </Button>
+        {isAdmin && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setWeekStart(getWeekRange(new Date()).from)}
+            type="button"
+          >
+            Today
+          </Button>
+        )}
       </div>
       {shifts.length > 0 && (
         <p className={styles.swipeHint} aria-hidden>
@@ -254,15 +270,33 @@ export function RotaPage() {
 
       {shifts.length === 0 ? (
         <Card className={styles.emptyCard}>
-          <p className="text-muted">
-            {isAdmin ? 'No shifts this week. Add a shift to get started.' : 'No shifts scheduled for you this week.'}
-          </p>
-          {isAdmin && (
-            <Link to={ROUTES_ROTA.NEW}>
-              <Button variant="primary" className={styles.emptyButton}>
-                Add shift
+          {isAdmin && staffFilter.trim() && allShifts.length > 0 ? (
+            <>
+              <p className="text-muted">
+                No carers match &quot;{staffFilter.trim()}&quot;. Clear the filter to see all shifts.
+              </p>
+              <Button
+                variant="secondary"
+                className={styles.emptyButton}
+                onClick={() => setStaffFilter('')}
+                type="button"
+              >
+                Clear filter
               </Button>
-            </Link>
+            </>
+          ) : (
+            <>
+              <p className="text-muted">
+                {isAdmin ? 'No shifts this week. Add a shift to get started.' : 'No shifts scheduled for you this week.'}
+              </p>
+              {isAdmin && (
+                <Link to={ROUTES_ROTA.NEW}>
+                  <Button variant="primary" className={styles.emptyButton}>
+                    Add shift
+                  </Button>
+                </Link>
+              )}
+            </>
           )}
         </Card>
       ) : (
@@ -334,6 +368,7 @@ function AssignDropdown({ shift }: { shift: import('../../types/shift').Shift })
   const store = useDemoStore()
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
+  const [assignSearch, setAssignSearch] = useState('')
   const buttonRef = useRef<HTMLDivElement>(null)
   const approvedAbsences = store.getAbsences({ status: ABSENCE_STATUS.APPROVED })
   const isOnLeave = (staffId: string, date: string) =>
@@ -343,11 +378,19 @@ function AssignDropdown({ shift }: { shift: import('../../types/shift').Shift })
   const staffList = store
     .getStaffList()
     .filter((s) => !isOnLeave(s.id, shift.date))
+  const filteredStaff =
+    assignSearch.trim() === ''
+      ? staffList
+      : staffList.filter((s) =>
+          s.name.toLowerCase().includes(assignSearch.trim().toLowerCase())
+        )
+  const showSearch = staffList.length > 5
 
   const handleToggle = () => {
     if (!open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPosition({ top: rect.bottom + 4, left: rect.left })
+      setAssignSearch('')
     }
     setOpen((o) => !o)
   }
@@ -394,7 +437,20 @@ function AssignDropdown({ shift }: { shift: import('../../types/shift').Shift })
               >
                 Unassign
               </button>
-              {staffList.map((s) => (
+              {showSearch && (
+                <div className={styles.dropdownSearch} onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="search"
+                    placeholder="Search staff..."
+                    value={assignSearch}
+                    onChange={(e) => setAssignSearch(e.target.value)}
+                    className={styles.dropdownSearchInput}
+                    autoFocus
+                    aria-label="Filter staff by name"
+                  />
+                </div>
+              )}
+              {filteredStaff.map((s) => (
                 <button
                   key={s.id}
                   type="button"
@@ -407,6 +463,9 @@ function AssignDropdown({ shift }: { shift: import('../../types/shift').Shift })
                   {s.name}
                 </button>
               ))}
+              {showSearch && filteredStaff.length === 0 && (
+                <div className={styles.dropdownEmpty}>No staff match</div>
+              )}
             </div>
           </>,
           document.body

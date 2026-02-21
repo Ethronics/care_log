@@ -43,6 +43,8 @@ export const STORAGE_KEYS = {
   THEME: 'care_log_theme',
   DEMO_DATA: 'care_log_demo_data',
   SIDEBAR_COLLAPSED: 'care_log_sidebar_collapsed',
+  ROTA_WEEK_START: 'care_log_rota_week_start',
+  ROTA_STAFF_FILTER: 'care_log_rota_staff_filter',
 } as const
 
 export const ROUTES_STAFF = {

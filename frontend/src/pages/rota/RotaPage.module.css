@@ -29,7 +29,16 @@
 
 .staffFilterWrap {
   margin-bottom: var(--space-3);
-  max-width: 280px;
+  max-width: 360px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.staffFilterWrap > *:first-child {
+  flex: 1;
+  min-width: 200px;
 }
 
 @media (max-width: 767px) {
@@ -44,10 +53,9 @@
 }
 
 .filterHint {
-  display: block;
   font-size: var(--text-xs);
   color: var(--color-text-muted);
-  margin-top: var(--space-1);
+  width: 100%;
 }
 
 .intro {
@@ -469,4 +477,32 @@
 
 .dropdownItem:hover {
   background: var(--color-bg-muted);
+}
+
+.dropdownSearch {
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-elevated);
+}
+
+.dropdownSearchInput {
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+}
+
+.dropdownSearchInput:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 0;
+}
+
+.dropdownEmpty {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
