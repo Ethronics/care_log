@@ -97,6 +97,14 @@ export function IconPanelLeftOpen({ className }: { className?: string }) {
   )
 }
 
+export function IconX({ className }: { className?: string }) {
+  return (
+    <svg className={className || iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
 /** User with plus – assign or change staff */
 export function IconUserPlus({ className }: { className?: string }) {
   return (

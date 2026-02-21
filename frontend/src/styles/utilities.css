@@ -80,6 +80,16 @@
 
 .mb-4 { margin-bottom: var(--space-4); }
 
+/* Page header: title row with optional actions */
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
 /* Screen reader only */
 .sr-only {
   position: absolute;

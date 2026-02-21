@@ -35,7 +35,7 @@ export function StaffListPage() {
           <Button variant="primary">Add staff</Button>
         </Link>
       </div>
-      <p className="body-text text-muted" style={{ marginBottom: 'var(--space-6)' }}>
+      <p className="page-description">
         Manage team members and their roles. Data is stored in this browser until you connect a backend.
       </p>
 

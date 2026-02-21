@@ -8,7 +8,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  transition: width 0.2s ease;
+  transition: width var(--transition-base);
 }
 
 .sidebar.collapsed {
@@ -103,6 +103,7 @@
   font-size: var(--text-sm);
   min-height: 44px;
   border-left: 3px solid transparent;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .sidebar.collapsed .link {
