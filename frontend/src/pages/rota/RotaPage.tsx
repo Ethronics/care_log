@@ -5,7 +5,7 @@ import { useBreadcrumbs } from '../../contexts/BreadcrumbContext'
 import { useDemoStore } from '../../store/demoStoreContext'
 import { getUser } from '../../utils/auth'
 import { ROUTES, ROUTES_ROTA, ROLES } from '../../utils/constants'
-import { Button, Card, Badge } from '../../components/ui'
+import { Button, Card, Badge, Input } from '../../components/ui'
 import { IconUserPlus } from '../../components/icons'
 import { getWeekRange, formatWeekLabel, addWeek, getWeekDays, formatDayShort } from './weekUtils'
 import { ABSENCE_STATUS } from '../../types/absence'
@@ -21,12 +21,21 @@ export function RotaPage() {
     : store.getStaffList().find((s) => s.email === user?.email)?.id ?? null
 
   const [weekStart, setWeekStart] = useState(() => getWeekRange(new Date()).from)
+  const [staffFilter, setStaffFilter] = useState('')
   const [autoFillResult, setAutoFillResult] = useState<{ assigned: number; skipped: number } | null>(null)
   const [unassignCount, setUnassignCount] = useState<number | null>(null)
   const { from, to } = getWeekRange(new Date(weekStart + 'T12:00:00'))
-  const shifts = store.getShifts(
+  const allShifts = store.getShifts(
     currentStaffId ? { from, to, staffId: currentStaffId } : { from, to }
   )
+  const shifts =
+    isAdmin && staffFilter.trim()
+      ? allShifts.filter((shift) => {
+          if (!shift.staffId) return true
+          const staff = store.getStaff(shift.staffId)
+          return staff?.name.toLowerCase().includes(staffFilter.trim().toLowerCase()) ?? false
+        })
+      : allShifts
   const weekDays = getWeekDays(from)
 
   useEffect(() => {
@@ -42,7 +51,7 @@ export function RotaPage() {
     setUnassignCount(null)
   }, [weekStart])
 
-  const unassignedThisWeek = shifts.filter((s) => !s.staffId).length
+  const unassignedThisWeek = allShifts.filter((s) => !s.staffId).length
 
   const approvedAbsences = store.absences.filter((a) => a.status === ABSENCE_STATUS.APPROVED)
   const activeStaff = store.getStaffList()
@@ -100,6 +109,24 @@ export function RotaPage() {
           </div>
         )}
       </div>
+      {isAdmin && (
+        <div className={styles.staffFilterWrap}>
+          <Input
+            type="search"
+            label="Filter by carer"
+            placeholder="Search by name..."
+            value={staffFilter}
+            onChange={(e) => setStaffFilter(e.target.value)}
+            className={styles.staffFilterInput}
+            aria-label="Filter rota by carer name"
+          />
+          {staffFilter.trim() && (
+            <span className={styles.filterHint}>
+              Showing shifts for carers matching &quot;{staffFilter.trim()}&quot; and unassigned shifts
+            </span>
+          )}
+        </div>
+      )}
       {isAdmin && (
         <p className={styles.intro}>
           {unassignedThisWeek > 0
@@ -185,6 +212,28 @@ export function RotaPage() {
               </div>
             </div>
           </details>
+        </div>
+      )}
+
+      {isAdmin && (
+        <div className={styles.carerFilter}>
+          <label htmlFor="carer-search" className={styles.carerFilterLabel}>
+            Filter by carer name
+          </label>
+          <Input
+            id="carer-search"
+            type="search"
+            placeholder="Search by name..."
+            value={staffFilter}
+            onChange={(e) => setStaffFilter(e.target.value)}
+            className={styles.carerFilterInput}
+            aria-describedby={staffFilter.trim() ? 'carer-filter-active' : undefined}
+          />
+          {staffFilter.trim() && (
+            <span id="carer-filter-active" className="text-sm text-muted" aria-live="polite">
+              Showing only shifts assigned to carers matching &quot;{staffFilter.trim()}&quot;
+            </span>
+          )}
         </div>
       )}
 

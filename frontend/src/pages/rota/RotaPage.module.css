@@ -27,6 +27,29 @@
   }
 }
 
+.staffFilterWrap {
+  margin-bottom: var(--space-3);
+  max-width: 280px;
+}
+
+@media (max-width: 767px) {
+  .staffFilterWrap {
+    margin-bottom: var(--space-2);
+    max-width: 100%;
+  }
+}
+
+.staffFilterInput {
+  margin-bottom: 0;
+}
+
+.filterHint {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
+
 .intro {
   color: var(--color-text-muted);
   font-size: var(--text-sm);
@@ -183,6 +206,25 @@
 
 .eligibilityList li {
   padding: var(--space-1) 0;
+}
+
+.carerFilter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.carerFilterLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text);
+}
+
+.carerFilterInput {
+  min-width: 200px;
+  max-width: 280px;
 }
 
 .weekNav {
