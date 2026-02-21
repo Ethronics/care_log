@@ -30,6 +30,11 @@ export function RotaPage() {
     if (typeof sessionStorage === 'undefined') return ''
     return sessionStorage.getItem(STORAGE_KEYS.ROTA_STAFF_FILTER) ?? ''
   })
+  const [highlightToday, setHighlightToday] = useState(() => {
+    if (typeof sessionStorage === 'undefined') return true
+    const saved = sessionStorage.getItem(STORAGE_KEYS.ROTA_HIGHLIGHT_TODAY)
+    return saved !== 'false'
+  })
   const [autoFillResult, setAutoFillResult] = useState<{ assigned: number; skipped: number } | null>(null)
   const [unassignCount, setUnassignCount] = useState<number | null>(null)
   const { from, to } = getWeekRange(new Date(weekStart + 'T12:00:00'))
@@ -69,6 +74,11 @@ export function RotaPage() {
     sessionStorage.setItem(STORAGE_KEYS.ROTA_STAFF_FILTER, staffFilter)
   }, [isAdmin, staffFilter])
 
+  useEffect(() => {
+    if (typeof sessionStorage === 'undefined') return
+    sessionStorage.setItem(STORAGE_KEYS.ROTA_HIGHLIGHT_TODAY, String(highlightToday))
+  }, [highlightToday])
+
   const unassignedThisWeek = allShifts.filter((s) => !s.staffId).length
 
   const approvedAbsences = store.absences.filter((a) => a.status === ABSENCE_STATUS.APPROVED)
@@ -94,6 +104,8 @@ export function RotaPage() {
     acc[day] = shifts.filter((s) => s.date === day)
     return acc
   }, {} as Record<string, typeof shifts>)
+
+  const todayISO = new Date().toISOString().slice(0, 10)
 
   return (
     <div className="container">
@@ -262,6 +274,34 @@ export function RotaPage() {
           </Button>
         )}
       </div>
+      {shifts.length > 0 && weekDays.includes(todayISO) && (
+        <p className={styles.todayColumnHint} role="status">
+          {highlightToday ? (
+            <>
+              Today&apos;s column is highlighted.{' '}
+              <button
+                type="button"
+                className={styles.todayColumnToggle}
+                onClick={() => setHighlightToday(false)}
+                aria-pressed="true"
+              >
+                Hide highlight
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className={styles.todayColumnToggle}
+                onClick={() => setHighlightToday(true)}
+                aria-pressed="false"
+              >
+                Highlight today&apos;s column
+              </button>
+            </>
+          )}
+        </p>
+      )}
       {shifts.length > 0 && (
         <p className={styles.swipeHint} aria-hidden>
           Swipe left or right for other days
@@ -302,8 +342,19 @@ export function RotaPage() {
       ) : (
         <div className={styles.weekGrid}>
           {weekDays.map((day) => (
-            <div key={day} className={styles.dayColumn}>
-              <div className={styles.dayHeader}>{formatDayShort(day)}</div>
+            <div
+              key={day}
+              className={`${styles.dayColumn} ${day === todayISO && highlightToday ? styles.dayColumnToday : ''}`}
+              aria-current={day === todayISO && highlightToday ? 'date' : undefined}
+            >
+              <div className={styles.dayHeader}>
+                <span className={styles.dayHeaderTitle}>{formatDayShort(day)}</span>
+                {day === todayISO && highlightToday && (
+                  <span className={styles.todayLabel} aria-hidden="false">
+                    Today
+                  </span>
+                )}
+              </div>
               <div className={styles.shifts}>
                 {(shiftsByDate[day] ?? []).map((shift) => (
                   <ShiftCard key={shift.id} shift={shift} isAdmin={isAdmin} />

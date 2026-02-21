@@ -45,6 +45,7 @@ export const STORAGE_KEYS = {
   SIDEBAR_COLLAPSED: 'care_log_sidebar_collapsed',
   ROTA_WEEK_START: 'care_log_rota_week_start',
   ROTA_STAFF_FILTER: 'care_log_rota_staff_filter',
+  ROTA_HIGHLIGHT_TODAY: 'care_log_rota_highlight_today',
 } as const
 
 export const ROUTES_STAFF = {
