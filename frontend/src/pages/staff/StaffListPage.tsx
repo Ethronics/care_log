@@ -1,17 +1,28 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useBreadcrumbs } from '../../contexts/BreadcrumbContext'
 import { useDemoStore } from '../../store/demoStoreContext'
 import { ROUTES, ROUTES_STAFF, ROLES, STAFF_LEVELS } from '../../utils/constants'
-import { Button, Badge, Card, ConfirmDialog, EmptyState } from '../../components/ui'
+import { Button, Badge, Card, ConfirmDialog, EmptyState, Input } from '../../components/ui'
 import styles from './StaffListPage.module.css'
 
 export function StaffListPage() {
   const { setItems } = useBreadcrumbs()
   const { getStaffList, deactivateStaff } = useDemoStore()
   const [deactivateId, setDeactivateId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
-  const staff = getStaffList({ includeInactive: false })
+  const allStaff = getStaffList({ includeInactive: false })
+  const staff = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return allStaff
+    return allStaff.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.email.toLowerCase().includes(q) ||
+        (s.phone && s.phone.toLowerCase().includes(q))
+    )
+  }, [allStaff, searchQuery])
   const today = new Date().toISOString().slice(0, 10)
   const trainingStatus = (s: { trainingExpiryDate?: string | null }) => {
     const exp = s.trainingExpiryDate
@@ -39,7 +50,24 @@ export function StaffListPage() {
         Manage team members and their roles. Data is stored in this browser until you connect a backend.
       </p>
 
-      {staff.length === 0 ? (
+      {allStaff.length > 0 && (
+        <div className={styles.searchWrap}>
+          <Input
+            type="search"
+            placeholder="Search by name, email or phone…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search staff"
+          />
+          {searchQuery.trim() && (
+            <p className={styles.searchHint}>
+              Showing {staff.length} of {allStaff.length}
+            </p>
+          )}
+        </div>
+      )}
+
+      {allStaff.length === 0 ? (
         <Card className={styles.emptyCard}>
           <EmptyState
             title="No staff yet"
@@ -50,6 +78,10 @@ export function StaffListPage() {
               </Link>
             }
           />
+        </Card>
+      ) : staff.length === 0 ? (
+        <Card className={styles.emptyCard}>
+          <p className="text-muted">No staff match &quot;{searchQuery.trim()}&quot;.</p>
         </Card>
       ) : (
         <>

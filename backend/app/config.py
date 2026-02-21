@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
 
+    # Optional: for intelligent care-log summarization (POST /api/summarize). Free tier at https://ai.google.dev/
+    GEMINI_API_KEY: str | None = None
+
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -41,14 +41,65 @@
   min-width: 200px;
 }
 
+.filtersWrap {
+  margin-bottom: var(--space-3);
+  max-width: 560px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.filtersWrap .filterInput {
+  margin-bottom: 0;
+  min-width: 200px;
+  flex: 1;
+}
+
+.serviceUserFilterField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 180px;
+}
+
+.filterLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text);
+}
+
+.serviceUserSelect {
+  padding: var(--space-2);
+  font-size: var(--text-base);
+  font-family: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.serviceUserSelect:focus {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
 @media (max-width: 767px) {
   .staffFilterWrap {
+    margin-bottom: var(--space-2);
+    max-width: 100%;
+  }
+  .filtersWrap {
     margin-bottom: var(--space-2);
     max-width: 100%;
   }
 }
 
 .staffFilterInput {
+  margin-bottom: 0;
+}
+
+.filterInput {
   margin-bottom: 0;
 }
 
@@ -449,9 +500,22 @@
 }
 
 .shiftTime {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
   color: var(--color-text);
+}
+
+.handoverBadge {
+  font-size: 10px;
+  font-weight: var(--font-normal);
+  color: var(--color-primary-600);
+  background: var(--color-primary-100, #e0e7ff);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
 }
 
 @media (max-width: 767px) {

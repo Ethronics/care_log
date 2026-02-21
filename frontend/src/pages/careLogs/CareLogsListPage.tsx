@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useBreadcrumbs } from '../../contexts/BreadcrumbContext'
 import { useDemoStore } from '../../store/demoStoreContext'
 import { ROUTES, ROUTES_SERVICE_USERS, ROUTES_CARE_LOGS } from '../../utils/constants'
-import { Card, Badge } from '../../components/ui'
+import { Card, Badge, Button, SearchableSelect } from '../../components/ui'
 import { TYPE_LABELS } from './CareLogForm'
 import type { CareLogType } from '../../types/careLog'
 import styles from './CareLogsListPage.module.css'
@@ -51,28 +51,30 @@ export function CareLogsListPage() {
 
   return (
     <div className="container">
-      <h1 className="page-title">Care logs</h1>
-      <p className="body-text text-muted" style={{ marginBottom: 'var(--space-4)' }}>
-        Recent care activity. Add logs from a service user&apos;s profile.
-      </p>
+      <div className={styles.pageHeader}>
+        <div>
+          <h1 className="page-title">Care logs</h1>
+          <p className="body-text text-muted" style={{ marginBottom: 0 }}>
+            Carers record visits and observations here. Open a service user to take a log.
+          </p>
+        </div>
+        <Link to={ROUTES_SERVICE_USERS.LIST}>
+          <Button variant="primary" size="sm">Take a log</Button>
+        </Link>
+      </div>
 
       <div className={styles.filter}>
-        <label htmlFor="filter-su" className={styles.filterLabel}>
-          Filter by service user
-        </label>
-        <select
-          id="filter-su"
+        <SearchableSelect
+          label="Filter by service user"
+          options={serviceUsers.map((u) => ({ id: u.id, label: u.name }))}
           value={serviceUserFilter}
-          onChange={(e) => setServiceUserFilter(e.target.value)}
-          className={styles.select}
-        >
-          <option value="">All</option>
-          {serviceUsers.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.name}
-            </option>
-          ))}
-        </select>
+          onChange={setServiceUserFilter}
+          allowEmpty
+          emptyLabel="All"
+          placeholder="Search service users…"
+          aria-label="Filter care logs by service user"
+          listMaxHeight={320}
+        />
       </div>
 
       {logs.length === 0 ? (
@@ -80,11 +82,11 @@ export function CareLogsListPage() {
           <p className="text-muted">
             {serviceUserFilter
               ? 'No care logs for this service user.'
-              : 'No care logs yet. Open a service user and add a log from their Care timeline.'}
+              : 'No care logs yet. Use “Take a log” to open a service user and record a care log.'}
           </p>
           {!serviceUserFilter && (
             <Link to={ROUTES_SERVICE_USERS.LIST} className={styles.link}>
-              View service users
+              Choose a service user to take a log
             </Link>
           )}
         </Card>

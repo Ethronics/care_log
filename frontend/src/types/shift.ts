@@ -6,6 +6,10 @@ export interface Shift {
   serviceUserId: string
   staffId: string | null // null = unassigned
   notes: string
+  /** Handover note for the next carer (left at end of shift). */
+  handoverNote?: string
+  handoverAuthorId?: string
+  handoverAt?: string // ISO
   createdAt: string
   updatedAt: string
 }

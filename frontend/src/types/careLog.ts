@@ -13,6 +13,8 @@ export interface CareLog {
   authorId: string // staff id
   type: CareLogType
   content: string
+  /** Optional: original voice/raw transcript when content was summarized on save */
+  rawContent?: string
   createdAt: string
   updatedAt: string
 }

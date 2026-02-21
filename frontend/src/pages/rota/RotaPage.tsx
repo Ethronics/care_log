@@ -30,6 +30,10 @@ export function RotaPage() {
     if (typeof sessionStorage === 'undefined') return ''
     return sessionStorage.getItem(STORAGE_KEYS.ROTA_STAFF_FILTER) ?? ''
   })
+  const [serviceUserFilterId, setServiceUserFilterId] = useState(() => {
+    if (typeof sessionStorage === 'undefined') return ''
+    return sessionStorage.getItem(STORAGE_KEYS.ROTA_SERVICE_USER_FILTER) ?? ''
+  })
   const [highlightToday, setHighlightToday] = useState(() => {
     if (typeof sessionStorage === 'undefined') return true
     const saved = sessionStorage.getItem(STORAGE_KEYS.ROTA_HIGHLIGHT_TODAY)
@@ -41,15 +45,19 @@ export function RotaPage() {
   const allShifts = store.getShifts(
     currentStaffId ? { from, to, staffId: currentStaffId } : { from, to }
   )
-  const shifts =
-    isAdmin && staffFilter.trim()
-      ? allShifts.filter((shift) => {
-          if (!shift.staffId) return true
-          const staff = store.getStaff(shift.staffId)
-          return staff?.name.toLowerCase().includes(staffFilter.trim().toLowerCase()) ?? false
-        })
-      : allShifts
+  const shifts = isAdmin
+    ? allShifts.filter((shift) => {
+        const matchServiceUser = !serviceUserFilterId || shift.serviceUserId === serviceUserFilterId
+        if (!matchServiceUser) return false
+        if (!staffFilter.trim()) return true
+        if (!shift.staffId) return true
+        const staff = store.getStaff(shift.staffId)
+        return staff?.name.toLowerCase().includes(staffFilter.trim().toLowerCase()) ?? false
+      })
+    : allShifts
   const weekDays = getWeekDays(from)
+  const serviceUsers = store.getServiceUserList()
+  const activeFiltersCount = (staffFilter.trim() ? 1 : 0) + (serviceUserFilterId ? 1 : 0)
 
   useEffect(() => {
     setItems([
@@ -73,6 +81,11 @@ export function RotaPage() {
     if (typeof sessionStorage === 'undefined' || !isAdmin) return
     sessionStorage.setItem(STORAGE_KEYS.ROTA_STAFF_FILTER, staffFilter)
   }, [isAdmin, staffFilter])
+
+  useEffect(() => {
+    if (typeof sessionStorage === 'undefined' || !isAdmin) return
+    sessionStorage.setItem(STORAGE_KEYS.ROTA_SERVICE_USER_FILTER, serviceUserFilterId)
+  }, [isAdmin, serviceUserFilterId])
 
   useEffect(() => {
     if (typeof sessionStorage === 'undefined') return
@@ -140,28 +153,54 @@ export function RotaPage() {
         )}
       </div>
       {isAdmin && (
-        <div className={styles.staffFilterWrap}>
+        <div className={styles.filtersWrap}>
           <Input
             type="search"
             label="Filter by carer"
             placeholder="Search by name..."
             value={staffFilter}
             onChange={(e) => setStaffFilter(e.target.value)}
-            className={styles.staffFilterInput}
+            className={styles.filterInput}
             aria-label="Filter rota by carer name"
           />
-          {staffFilter.trim() && (
+          <div className={styles.serviceUserFilterField}>
+            <label className={styles.filterLabel} htmlFor="rota-service-user-filter">
+              Filter by service user
+            </label>
+            <select
+              id="rota-service-user-filter"
+              className={styles.serviceUserSelect}
+              value={serviceUserFilterId}
+              onChange={(e) => setServiceUserFilterId(e.target.value)}
+              aria-label="Filter rota by service user"
+            >
+              <option value="">All</option>
+              {serviceUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {activeFiltersCount > 0 && (
             <>
               <span className={styles.filterHint}>
-                Showing shifts for carers matching &quot;{staffFilter.trim()}&quot; and unassigned shifts
+                {serviceUserFilterId && staffFilter.trim()
+                  ? `Showing shifts for ${store.getServiceUser(serviceUserFilterId)?.name ?? 'this user'} with carers matching "${staffFilter.trim()}" (and unassigned)`
+                  : serviceUserFilterId
+                    ? `Showing shifts for ${store.getServiceUser(serviceUserFilterId)?.name ?? 'this user'}`
+                    : `Showing shifts for carers matching "${staffFilter.trim()}" and unassigned shifts`}
               </span>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setStaffFilter('')}
+                onClick={() => {
+                  setStaffFilter('')
+                  setServiceUserFilterId('')
+                }}
                 type="button"
               >
-                Clear filter
+                Clear filters
               </Button>
             </>
           )}
@@ -310,18 +349,21 @@ export function RotaPage() {
 
       {shifts.length === 0 ? (
         <Card className={styles.emptyCard}>
-          {isAdmin && staffFilter.trim() && allShifts.length > 0 ? (
+          {isAdmin && activeFiltersCount > 0 && allShifts.length > 0 ? (
             <>
               <p className="text-muted">
-                No carers match &quot;{staffFilter.trim()}&quot;. Clear the filter to see all shifts.
+                No shifts match the current filters. Clear filters to see all shifts.
               </p>
               <Button
                 variant="secondary"
                 className={styles.emptyButton}
-                onClick={() => setStaffFilter('')}
+                onClick={() => {
+                  setStaffFilter('')
+                  setServiceUserFilterId('')
+                }}
                 type="button"
               >
-                Clear filter
+                Clear filters
               </Button>
             </>
           ) : (
@@ -385,10 +427,17 @@ function ShiftCard({
   const serviceUser = store.getServiceUser(shift.serviceUserId)
   const staff = shift.staffId ? store.getStaff(shift.staffId) : null
 
+  const hasHandover = Boolean(shift.handoverNote?.trim())
+
   return (
     <Card key={shift.id} padding="sm" className={styles.shiftCard}>
       <div className={styles.shiftTime}>
         {shift.startTime} – {shift.endTime}
+        {hasHandover && (
+          <span className={styles.handoverBadge} title="Has handover note">
+            Handover
+          </span>
+        )}
       </div>
       <div className={styles.shiftServiceUser}>
         {serviceUser?.name ?? 'Unknown'}

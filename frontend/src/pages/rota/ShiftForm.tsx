@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Input, Alert } from '../../components/ui'
+import { Button, Input, Alert, SearchableSelect } from '../../components/ui'
 import type { Shift } from '../../types/shift'
 import styles from './ShiftForm.module.css'
 
@@ -95,43 +95,26 @@ export function ShiftForm({
           required
         />
       </div>
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="shift-service-user">
-          Service user
-        </label>
-        <select
-          id="shift-service-user"
-          value={values.serviceUserId}
-          onChange={(e) => setValues((v) => ({ ...v, serviceUserId: e.target.value }))}
-          className={styles.select}
-          required
-        >
-          <option value="">Select…</option>
-          {serviceUserOptions.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="shift-staff">
-          Assign staff (optional)
-        </label>
-        <select
-          id="shift-staff"
-          value={values.staffId}
-          onChange={(e) => setValues((v) => ({ ...v, staffId: e.target.value }))}
-          className={styles.select}
-        >
-          <option value="">Unassigned</option>
-          {staffOptions.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <SearchableSelect
+        label="Service user"
+        options={serviceUserOptions.map((u) => ({ id: u.id, label: u.name }))}
+        value={values.serviceUserId}
+        onChange={(id) => setValues((v) => ({ ...v, serviceUserId: id }))}
+        placeholder="Search service users…"
+        aria-label="Select service user"
+        listMaxHeight={320}
+      />
+      <SearchableSelect
+        label="Assign staff (optional)"
+        options={staffOptions.map((s) => ({ id: s.id, label: s.name }))}
+        value={values.staffId}
+        onChange={(id) => setValues((v) => ({ ...v, staffId: id }))}
+        allowEmpty
+        emptyLabel="Unassigned"
+        placeholder="Search staff…"
+        aria-label="Assign staff"
+        listMaxHeight={320}
+      />
       <div className={styles.field}>
         <label className={styles.label}>Notes</label>
         <textarea

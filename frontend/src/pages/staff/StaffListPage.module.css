@@ -7,6 +7,17 @@
   margin-bottom: var(--space-4);
 }
 
+.searchWrap {
+  max-width: 360px;
+  margin-bottom: var(--space-4);
+}
+
+.searchHint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: var(--space-1) 0 0;
+}
+
 .tableWrap {
   overflow-x: auto;
   border: 1px solid var(--color-border);
