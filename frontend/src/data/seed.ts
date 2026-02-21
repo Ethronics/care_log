@@ -1,4 +1,4 @@
-import { ROLES } from '../utils/constants'
+import { ROLES, STAFF_LEVELS } from '../utils/constants'
 import type { DemoStore } from '../types/demoStore'
 import type { Staff } from '../types/staff'
 import type { ServiceUser } from '../types/serviceUser'
@@ -40,6 +40,7 @@ export function seedStaff(): Staff[] {
       email: 'jane.smith@example.com',
       phone: '+44 7700 900001',
       role: ROLES.ADMIN,
+      staffLevel: STAFF_LEVELS.SENIOR_CARER,
       isActive: true,
       trainingExpiryDate: trainingValid,
       contractedHoursPerWeek: 40,
@@ -54,6 +55,7 @@ export function seedStaff(): Staff[] {
       email: 'john.doe@example.com',
       phone: '+44 7700 900002',
       role: ROLES.STAFF,
+      staffLevel: STAFF_LEVELS.SENIOR_CARER,
       isActive: true,
       trainingExpiryDate: trainingValid,
       contractedHoursPerWeek: 40,
@@ -68,6 +70,7 @@ export function seedStaff(): Staff[] {
       email: 'maria.garcia@example.com',
       phone: '+44 7700 900003',
       role: ROLES.STAFF,
+      staffLevel: STAFF_LEVELS.SENIOR_CARER,
       isActive: true,
       trainingExpiryDate: trainingValid,
       contractedHoursPerWeek: 35,
@@ -82,6 +85,7 @@ export function seedStaff(): Staff[] {
       email: 'tom.wilson@example.com',
       phone: '+44 7700 900004',
       role: ROLES.STAFF,
+      staffLevel: STAFF_LEVELS.CARER,
       isActive: true,
       trainingExpiryDate: trainingExpired,
       contractedHoursPerWeek: 40,
@@ -96,6 +100,7 @@ export function seedStaff(): Staff[] {
       email: 'sarah.lee@example.com',
       phone: '+44 7700 900005',
       role: ROLES.STAFF,
+      staffLevel: STAFF_LEVELS.CARER,
       isActive: false,
       trainingExpiryDate: trainingValid,
       contractedHoursPerWeek: 40,

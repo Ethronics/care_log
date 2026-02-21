@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import { getRole } from '../../utils/auth'
 import { getNavItemsForRole, getProfileNavItem } from '../../utils/navConfig'
@@ -32,14 +33,14 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
     }
   }, [open, onClose])
 
-  return (
+  const content = (
     <>
       <div
         className={`${styles.backdrop} ${open ? styles.open : ''}`}
         onClick={onClose}
         onKeyDown={(e) => e.key === 'Enter' && onClose()}
         role="button"
-        tabIndex={0}
+        tabIndex={open ? 0 : -1}
         aria-label="Close menu"
       />
       <aside
@@ -74,4 +75,6 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
       </aside>
     </>
   )
+
+  return createPortal(content, document.body)
 }

@@ -9,11 +9,14 @@ import { RoleGuard } from './components/auth/RoleGuard'
 import {
   HomePage,
   LoginPage,
+  RegisterPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
   DashboardPage,
   NotFoundPage,
   PlaceholderPage,
 } from './pages'
-import { StaffListPage, StaffCreatePage, StaffEditPage } from './pages/staff'
+import { StaffListPage, StaffCreatePage, StaffDetailPage, StaffEditPage } from './pages/staff'
 import {
   ServiceUserListPage,
   ServiceUserCreatePage,
@@ -42,6 +45,9 @@ function App() {
           <Routes>
             <Route path={ROUTES.HOME} element={<HomePage />} />
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+            <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+            <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+            <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
             <Route
               path="/"
               element={
@@ -82,6 +88,7 @@ function App() {
                 <Route index element={<StaffListPage />} />
                 <Route path="new" element={<StaffCreatePage />} />
                 <Route path=":id/edit" element={<StaffEditPage />} />
+                <Route path=":id" element={<StaffDetailPage />} />
               </Route>
               <Route path="service-users">
                 <Route index element={<ServiceUserListPage />} />

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ROLES, type Role } from '../../utils/constants'
+import { ROLES, STAFF_LEVELS, type Role, type StaffLevel } from '../../utils/constants'
 import { Button, Input, Alert } from '../../components/ui'
 import type { Staff } from '../../types/staff'
 import styles from './StaffForm.module.css'
@@ -9,8 +9,11 @@ export interface StaffFormValues {
   email: string
   phone: string
   role: Role
+  staffLevel: StaffLevel | ''
   trainingExpiryDate: string
   contractedHoursPerWeek: string
+  dbsCheckExpiry: string
+  safeguardingCompletedDate: string
 }
 
 const emptyValues: StaffFormValues = {
@@ -18,8 +21,11 @@ const emptyValues: StaffFormValues = {
   email: '',
   phone: '',
   role: ROLES.STAFF,
+  staffLevel: STAFF_LEVELS.CARER,
   trainingExpiryDate: '',
   contractedHoursPerWeek: '',
+  dbsCheckExpiry: '',
+  safeguardingCompletedDate: '',
 }
 
 interface StaffFormProps {
@@ -55,6 +61,10 @@ export function StaffForm({
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Please enter a valid email address.')
+      return
+    }
+    if (values.role === ROLES.STAFF && !values.staffLevel) {
+      setError('Please select staff type: Carer or Senior carer.')
       return
     }
     const contracted = values.contractedHoursPerWeek.trim()
@@ -103,14 +113,41 @@ export function StaffForm({
         <select
           id="staff-role"
           value={values.role}
-          onChange={(e) => setValues((v) => ({ ...v, role: e.target.value as Role }))}
+          onChange={(e) => {
+            const newRole = e.target.value as Role
+            setValues((v) => ({
+              ...v,
+              role: newRole,
+              staffLevel: newRole === ROLES.STAFF ? (v.staffLevel || STAFF_LEVELS.CARER) : '',
+            }))
+          }}
           className={styles.select}
           aria-label="Role"
         >
           <option value={ROLES.ADMIN}>Admin</option>
-          <option value={ROLES.STAFF}>Staff</option>
+          <option value={ROLES.STAFF}>Staff (carer or senior carer)</option>
         </select>
       </div>
+      {values.role === ROLES.STAFF && (
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="staff-level">
+            Type
+          </label>
+          <select
+            id="staff-level"
+            value={values.staffLevel}
+            onChange={(e) =>
+              setValues((v) => ({ ...v, staffLevel: e.target.value as StaffLevel | '' }))
+            }
+            className={styles.select}
+            aria-label="Staff type"
+          >
+            <option value={STAFF_LEVELS.CARER}>Carer</option>
+            <option value={STAFF_LEVELS.SENIOR_CARER}>Senior carer</option>
+          </select>
+          <span className={styles.hint}>Care staff are either Carer or Senior carer.</span>
+        </div>
+      )}
       <Input
         type="date"
         label="Training valid until (optional)"
@@ -128,6 +165,20 @@ export function StaffForm({
         step={1}
         hint="Used by Auto-Fill for fairness and overtime avoidance."
       />
+      <Input
+        type="date"
+        label="DBS check valid until (optional)"
+        value={values.dbsCheckExpiry}
+        onChange={(e) => setValues((v) => ({ ...v, dbsCheckExpiry: e.target.value }))}
+        hint="DBS certificate expiry date."
+      />
+      <Input
+        type="date"
+        label="Safeguarding training completed (optional)"
+        value={values.safeguardingCompletedDate}
+        onChange={(e) => setValues((v) => ({ ...v, safeguardingCompletedDate: e.target.value }))}
+        hint="Date safeguarding training was completed."
+      />
       <div className={styles.actions}>
         <Button type="submit" variant="primary" disabled={isSubmitting}>
           {isSubmitting ? 'Saving…' : submitLabel}
@@ -143,7 +194,10 @@ export function staffToFormValues(s: Staff): StaffFormValues {
     email: s.email,
     phone: s.phone,
     role: s.role,
+    staffLevel: s.role === ROLES.STAFF ? (s.staffLevel ?? STAFF_LEVELS.CARER) : '',
     trainingExpiryDate: s.trainingExpiryDate ?? '',
     contractedHoursPerWeek: s.contractedHoursPerWeek != null ? String(s.contractedHoursPerWeek) : '',
+    dbsCheckExpiry: s.dbsCheckExpiry ?? '',
+    safeguardingCompletedDate: s.safeguardingCompletedDate ?? '',
   }
 }

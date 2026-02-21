@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '../components/ui'
+import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Alert } from '../components/ui'
 import { useBreadcrumbs } from '../contexts/BreadcrumbContext'
 import { useDemoStore } from '../store/demoStoreContext'
 import { getUser } from '../utils/auth'
@@ -58,6 +58,7 @@ export function DashboardPage() {
   const currentStaffId = store.getStaffList().find((s) => s.email === user?.email)?.id ?? null
   const importInputRef = useRef<HTMLInputElement>(null)
   const [isImporting, setIsImporting] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
 
   const today = todayISO()
   const todayEnd = today
@@ -136,6 +137,15 @@ export function DashboardPage() {
           Overview and quick actions.
         </p>
 
+        {importError && (
+          <div className={styles.importErrorWrap}>
+            <Alert variant="error">{importError}</Alert>
+            <Button variant="ghost" size="sm" onClick={() => setImportError(null)}>
+              Dismiss
+            </Button>
+          </div>
+        )}
+
         <div className={styles.quickActions}>
           <Link to={ROUTES_ROTA.NEW}>
             <Button variant="primary" size="sm">Add shift</Button>
@@ -171,8 +181,15 @@ export function DashboardPage() {
             onChange={(e) => {
               const file = e.target.files?.[0]
               if (file) {
+                setImportError(null)
                 setIsImporting(true)
-                store.importDataFromJson(file).finally(() => setIsImporting(false))
+                store
+                  .importDataFromJson(file)
+                  .then(() => setImportError(null))
+                  .catch((err: unknown) => {
+                    setImportError(err instanceof Error ? err.message : 'Import failed.')
+                  })
+                  .finally(() => setIsImporting(false))
                 e.target.value = ''
               }
             }}

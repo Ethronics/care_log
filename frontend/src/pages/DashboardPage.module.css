@@ -1,3 +1,11 @@
+.importErrorWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
 .quickActions {
   display: flex;
   flex-wrap: wrap;

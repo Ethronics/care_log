@@ -1,5 +1,8 @@
 export { DashboardPage } from './DashboardPage'
+export { ForgotPasswordPage } from './ForgotPasswordPage'
 export { HomePage } from './HomePage'
 export { LoginPage } from './LoginPage'
 export { NotFoundPage } from './NotFoundPage'
 export { PlaceholderPage } from './PlaceholderPage'
+export { RegisterPage } from './RegisterPage'
+export { ResetPasswordPage } from './ResetPasswordPage'

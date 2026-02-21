@@ -7,6 +7,13 @@ import { ROUTES, ROUTES_CARE_LOGS, ROUTES_SERVICE_USERS, ROLES } from '../../uti
 import { Card, CardHeader, CardTitle, CardContent, Button, ConfirmDialog } from '../../components/ui'
 import { CareLogForm, careLogToFormValues, type CareLogFormValues } from './CareLogForm'
 
+const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000 // 24 hours for non-admin authors
+
+function isWithinEditWindow(createdAt: string, isAdmin: boolean): boolean {
+  if (isAdmin) return true
+  return Date.now() - new Date(createdAt).getTime() <= EDIT_WINDOW_MS
+}
+
 export function CareLogEditPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -20,7 +27,10 @@ export function CareLogEditPage() {
   const serviceUser = log ? store.getServiceUser(log.serviceUserId) : undefined
   const currentStaffId = store.getStaffList().find((s) => s.email === user?.email)?.id ?? null
   const isAdmin = user?.role === ROLES.ADMIN
-  const canEdit = log && (isAdmin || currentStaffId === log.authorId)
+  const isAuthor = log && currentStaffId === log.authorId
+  const withinTimeWindow = log && isWithinEditWindow(log.createdAt, isAdmin)
+  const canEdit = log && (isAdmin || isAuthor) && withinTimeWindow
+  const isAuthorOutsideWindow = log && isAuthor && !withinTimeWindow
 
   useEffect(() => {
     if (log && serviceUser) {
@@ -39,10 +49,10 @@ export function CareLogEditPage() {
       navigate(ROUTES.CARE_LOGS, { replace: true })
       return
     }
-    if (log && !canEdit) {
+    if (log && !canEdit && !isAuthorOutsideWindow) {
       navigate(ROUTES_SERVICE_USERS.DETAIL(log.serviceUserId), { replace: true })
     }
-  }, [id, log, canEdit, navigate])
+  }, [id, log, canEdit, isAuthorOutsideWindow, navigate])
 
   const handleSubmit = (values: CareLogFormValues) => {
     if (!id) return
@@ -59,7 +69,30 @@ export function CareLogEditPage() {
     navigate(ROUTES_SERVICE_USERS.DETAIL(log.serviceUserId))
   }
 
-  if (!log || !serviceUser || !canEdit) return null
+  if (!log || !serviceUser) return null
+
+  if (!canEdit && !isAuthorOutsideWindow) return null
+
+  if (isAuthorOutsideWindow) {
+    return (
+      <div className="container">
+        <Link
+          to={ROUTES_SERVICE_USERS.DETAIL(log.serviceUserId)}
+          className="text-sm text-muted"
+          style={{ display: 'inline-block', marginBottom: 'var(--space-2)' }}
+        >
+          ← Back to {serviceUser.name}
+        </Link>
+        <h1 className="page-title">Edit care log</h1>
+        <p className="body-text text-muted" style={{ marginBottom: 'var(--space-4)' }}>
+          You can only edit your own care logs within 24 hours of creation. This log is older. Contact a manager if a change is required.
+        </p>
+        <Link to={ROUTES_SERVICE_USERS.DETAIL(log.serviceUserId)}>
+          <Button variant="secondary">Back to {serviceUser.name}</Button>
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <div className="container">

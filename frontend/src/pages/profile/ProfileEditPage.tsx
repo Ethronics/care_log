@@ -12,9 +12,7 @@ export function ProfileEditPage() {
   const { setItems } = useBreadcrumbs()
   const store = useDemoStore()
   const user = getUser()
-  const staff = user?.email
-    ? store.getStaffList({ includeInactive: true }).find((s) => s.email === user.email)
-    : null
+  const staff = user?.email ? store.getStaffByEmail(user.email) ?? null : null
 
   const [name, setName] = useState(staff?.name ?? user?.name ?? '')
   const [phone, setPhone] = useState(staff?.phone ?? '')

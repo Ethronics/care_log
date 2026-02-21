@@ -22,11 +22,20 @@ export function Header({ onMenuClick }: HeaderProps) {
         <button
           type="button"
           className={styles.menuButton}
-          onClick={onMenuClick}
+          onClick={() => onMenuClick?.()}
+          onPointerDown={(e) => {
+            if (e.pointerType === 'touch') {
+              e.preventDefault()
+              onMenuClick?.()
+            }
+          }}
           aria-label="Open navigation menu"
+          aria-expanded={false}
         >
           <span className={styles.menuIcon} aria-hidden>
-            ☰
+            <span className={styles.menuBar} />
+            <span className={styles.menuBar} />
+            <span className={styles.menuBar} />
           </span>
         </button>
         <Link to={ROUTES.HOME} className={styles.logo}>

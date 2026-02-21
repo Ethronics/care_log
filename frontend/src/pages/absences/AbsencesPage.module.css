@@ -90,3 +90,71 @@
 .emptyCard {
   padding: var(--space-6);
 }
+
+/* Leave calendar */
+.calendarCard {
+  max-width: 560px;
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.calendarMonthLabel {
+  font-weight: var(--font-semibold);
+  font-size: var(--text-base);
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.calendarWeekday {
+  background: var(--color-bg-muted);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.calendarDay {
+  min-height: 64px;
+  background: var(--color-bg-elevated);
+  padding: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.calendarDayHasLeave {
+  background: var(--color-warning-50, rgba(234, 179, 8, 0.08));
+}
+
+.calendarDayNum {
+  display: block;
+  font-weight: var(--font-medium);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.calendarDayList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text);
+}
+
+.calendarDayList li {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

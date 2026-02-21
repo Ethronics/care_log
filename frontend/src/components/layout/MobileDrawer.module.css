@@ -3,14 +3,16 @@
   position: fixed;
   inset: 0;
   background-color: rgba(15, 23, 42, 0.4);
-  z-index: 199;
+  z-index: 1000;
   opacity: 0;
   transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .backdrop.open {
   display: block;
   opacity: 1;
+  pointer-events: auto;
 }
 
 .drawer {
@@ -23,18 +25,20 @@
   height: 100dvh;
   background-color: var(--color-bg-elevated);
   border-right: 1px solid var(--color-border);
-  z-index: 200;
+  z-index: 1001;
   transform: translateX(-100%);
   transition: transform 0.2s ease;
   overflow-y: auto;
   overflow-x: hidden;
   padding: calc(var(--space-6) + env(safe-area-inset-top, 0px)) var(--space-4);
   padding-left: calc(var(--space-4) + env(safe-area-inset-left, 0px));
+  pointer-events: none;
 }
 
 .drawer.open {
   transform: translateX(0);
   box-shadow: var(--shadow-lg);
+  pointer-events: auto;
 }
 
 .nav {

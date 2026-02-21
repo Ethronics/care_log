@@ -281,7 +281,14 @@ function AssignDropdown({ shift }: { shift: import('../../types/shift').Shift })
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef<HTMLDivElement>(null)
-  const staffList = store.getStaffList()
+  const approvedAbsences = store.getAbsences({ status: ABSENCE_STATUS.APPROVED })
+  const isOnLeave = (staffId: string, date: string) =>
+    approvedAbsences.some(
+      (a) => a.staffId === staffId && a.startDate <= date && a.endDate >= date
+    )
+  const staffList = store
+    .getStaffList()
+    .filter((s) => !isOnLeave(s.id, shift.date))
 
   const handleToggle = () => {
     if (!open && buttonRef.current) {

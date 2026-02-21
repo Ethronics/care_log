@@ -42,10 +42,13 @@ export function StaffEditPage() {
         email: values.email.trim(),
         phone: values.phone.trim(),
         role: values.role,
+        staffLevel: values.staffLevel || undefined,
         trainingExpiryDate: values.trainingExpiryDate.trim() || undefined,
         contractedHoursPerWeek: values.contractedHoursPerWeek.trim()
           ? Number(values.contractedHoursPerWeek)
           : undefined,
+        dbsCheckExpiry: values.dbsCheckExpiry.trim() || undefined,
+        safeguardingCompletedDate: values.safeguardingCompletedDate.trim() || undefined,
       })
       navigate(ROUTES_STAFF.LIST)
     } finally {

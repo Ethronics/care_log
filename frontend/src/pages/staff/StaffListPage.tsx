@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useBreadcrumbs } from '../../contexts/BreadcrumbContext'
 import { useDemoStore } from '../../store/demoStoreContext'
-import { ROUTES, ROUTES_STAFF, ROLES } from '../../utils/constants'
+import { ROUTES, ROUTES_STAFF, ROLES, STAFF_LEVELS } from '../../utils/constants'
 import { Button, Badge, Card, ConfirmDialog, EmptyState } from '../../components/ui'
 import styles from './StaffListPage.module.css'
 
@@ -61,6 +61,7 @@ export function StaffListPage() {
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Role</th>
+                  <th>Classification</th>
                   <th>Training</th>
                   <th>Hours</th>
                   <th className={styles.actionsCell}>Actions</th>
@@ -70,7 +71,9 @@ export function StaffListPage() {
                 {staff.map((s) => (
                   <tr key={s.id}>
                     <td>
-                      <span className={styles.name}>{s.name}</span>
+                      <Link to={ROUTES_STAFF.DETAIL(s.id)} className={styles.nameLink}>
+                        {s.name}
+                      </Link>
                     </td>
                     <td>{s.email}</td>
                     <td>{s.phone || '—'}</td>
@@ -78,6 +81,13 @@ export function StaffListPage() {
                       <Badge variant={s.role === ROLES.ADMIN ? 'info' : 'default'}>
                         {s.role === ROLES.ADMIN ? 'Admin' : 'Staff'}
                       </Badge>
+                    </td>
+                    <td>
+                      {s.staffLevel === STAFF_LEVELS.SENIOR_CARER
+                        ? 'Senior carer'
+                        : s.staffLevel === STAFF_LEVELS.CARER
+                          ? 'Carer'
+                          : '—'}
                     </td>
                     <td>
                       <span className={trainingStatus(s) === 'Expired' ? styles.trainingExpired : ''}>
@@ -105,12 +115,20 @@ export function StaffListPage() {
           <div className={styles.cardList}>
             {staff.map((s) => (
               <Card key={s.id} padding="md" className={styles.staffCard}>
-                <div className={styles.cardName}>{s.name}</div>
+                <Link to={ROUTES_STAFF.DETAIL(s.id)} className={styles.cardName}>
+                  {s.name}
+                </Link>
                 <div className="text-sm text-muted">{s.email}</div>
                 {s.phone && (
                   <div className="text-sm text-muted">{s.phone}</div>
                 )}
                 <div className="text-sm text-muted">
+                  {s.staffLevel === STAFF_LEVELS.SENIOR_CARER
+                    ? 'Senior carer'
+                    : s.staffLevel === STAFF_LEVELS.CARER
+                      ? 'Carer'
+                      : null}
+                  {s.staffLevel && ' · '}
                   Training: {trainingStatus(s)}
                   {s.contractedHoursPerWeek != null && ` · ${s.contractedHoursPerWeek} h/wk`}
                 </div>

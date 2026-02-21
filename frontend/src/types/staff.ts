@@ -1,4 +1,4 @@
-import type { Role } from '../utils/constants'
+import type { Role, StaffLevel } from '../utils/constants'
 
 export interface Staff {
   id: string
@@ -6,6 +6,8 @@ export interface Staff {
   email: string
   phone: string
   role: Role
+  /** Classification for care staff: carer or senior carer. Optional for admins. */
+  staffLevel?: StaffLevel | null
   isActive: boolean
   /** Training valid until this date (YYYY-MM-DD). Staff excluded from Auto-Fill when shift date is after this. */
   trainingExpiryDate?: string | null

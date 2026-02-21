@@ -39,6 +39,11 @@
   box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
 }
 
+.hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
 .actions {
   margin-top: var(--space-2);
 }

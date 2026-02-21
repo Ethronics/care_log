@@ -5,6 +5,9 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localho
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
+  REGISTER: '/register',
+  FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
   DASHBOARD: '/dashboard',
   ROTA: '/rota',
   STAFF: '/staff',
@@ -26,6 +29,14 @@ export const ROLES = {
 
 export type Role = (typeof ROLES)[keyof typeof ROLES]
 
+/** Staff classification: carer or senior carer (applies to care staff). */
+export const STAFF_LEVELS = {
+  CARER: 'carer',
+  SENIOR_CARER: 'senior_carer',
+} as const
+
+export type StaffLevel = (typeof STAFF_LEVELS)[keyof typeof STAFF_LEVELS]
+
 export const STORAGE_KEYS = {
   TOKEN: 'token',
   USER: 'user',
@@ -37,6 +48,7 @@ export const STORAGE_KEYS = {
 export const ROUTES_STAFF = {
   LIST: '/staff',
   NEW: '/staff/new',
+  DETAIL: (id: string) => `/staff/${id}`,
   EDIT: (id: string) => `/staff/${id}/edit`,
 } as const
 

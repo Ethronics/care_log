@@ -46,6 +46,16 @@
   color: var(--color-text);
 }
 
+.nameLink {
+  font-weight: var(--font-medium);
+  color: var(--color-primary-600);
+  text-decoration: none;
+}
+
+.nameLink:hover {
+  text-decoration: underline;
+}
+
 .trainingExpired {
   color: var(--color-error);
   font-weight: var(--font-medium);
@@ -98,6 +108,13 @@
 .cardName {
   font-weight: var(--font-semibold);
   font-size: var(--text-base);
+  color: var(--color-primary-600);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.cardName:hover {
+  text-decoration: underline;
 }
 
 .cardBadge {

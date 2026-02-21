@@ -65,6 +65,7 @@ function generateId(prefix: string): string {
 interface DemoStoreContextValue extends DemoStore {
   // Staff
   getStaff: (id: string) => Staff | undefined
+  getStaffByEmail: (email: string) => Staff | undefined
   getStaffList: (options?: { includeInactive?: boolean }) => Staff[]
   addStaff: (input: StaffCreateInput) => Staff
   updateStaff: (id: string, input: Partial<Staff>) => Staff | undefined
@@ -125,6 +126,12 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [store.staff]
   )
 
+  const getStaffByEmail = useCallback(
+    (email: string) =>
+      store.staff.find((s) => s.email.trim().toLowerCase() === email.trim().toLowerCase()),
+    [store.staff]
+  )
+
   const getStaffList = useCallback(
     (options?: { includeInactive?: boolean }) => {
       let list = [...store.staff]
@@ -146,6 +153,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       email: input.email,
       phone: input.phone ?? '',
       role: input.role,
+      staffLevel: input.staffLevel ?? undefined,
       isActive: input.isActive ?? true,
       trainingExpiryDate: input.trainingExpiryDate ?? undefined,
       contractedHoursPerWeek: input.contractedHoursPerWeek ?? undefined,
@@ -536,12 +544,24 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
 
   const importDataFromJson = useCallback(
     async (file: File): Promise<void> => {
-      const text = await file.text()
-      const parsed = JSON.parse(text) as unknown
-      const next = parseStoreFromJson(parsed)
-      if (next) {
-        setStore(next)
+      let text: string
+      try {
+        text = await file.text()
+      } catch {
+        throw new Error('Could not read file.')
       }
+      let parsed: unknown
+      try {
+        parsed = JSON.parse(text)
+      } catch (e) {
+        const message = e instanceof SyntaxError ? 'Invalid JSON.' : 'Could not parse file.'
+        throw new Error(message)
+      }
+      const next = parseStoreFromJson(parsed)
+      if (!next) {
+        throw new Error('Invalid or unsupported data format. Expected staff, serviceUsers, shifts, careLogs, absences.')
+      }
+      setStore(next)
     },
     []
   )
@@ -674,6 +694,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     () => ({
       ...store,
       getStaff,
+      getStaffByEmail,
       getStaffList,
       addStaff,
       updateStaff,
@@ -714,6 +735,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [
       store,
       getStaff,
+      getStaffByEmail,
       getStaffList,
       addStaff,
       updateStaff,
