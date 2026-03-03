@@ -1,0 +1,2 @@
+# SPA fallback (also in netlify.toml; this file is copied to dist by Vite)
+/*    /index.html   200
