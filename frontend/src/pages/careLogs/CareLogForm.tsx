@@ -54,7 +54,7 @@ export function CareLogForm({
   const [summarizeOnSave, setSummarizeOnSave] = useState(false)
   const [isSummarizing, setIsSummarizing] = useState(false)
   const [isListening, setIsListening] = useState(false)
-  const recognitionRef = useRef<InstanceType<ReturnType<typeof getSpeechRecognition>> | null>(null)
+  const recognitionRef = useRef<InstanceType<NonNullable<ReturnType<typeof getSpeechRecognition>>> | null>(null)
 
   const voiceSupported = isSpeechRecognitionSupported()
 

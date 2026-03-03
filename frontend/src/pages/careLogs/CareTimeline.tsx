@@ -48,10 +48,10 @@ function formatDateShort(iso: string): string {
 
 interface CareTimelineProps {
   serviceUserId: string
-  serviceUserName: string
+  serviceUserName?: string
 }
 
-export function CareTimeline({ serviceUserId, serviceUserName }: CareTimelineProps) {
+export function CareTimeline({ serviceUserId }: CareTimelineProps) {
   const store = useDemoStore()
   const user = getUser()
   const currentStaffId = store.getStaffList().find((s) => s.email === user?.email)?.id ?? null
