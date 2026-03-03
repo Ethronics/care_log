@@ -31,16 +31,34 @@ function formatDateTime(iso: string): string {
   }
 }
 
-interface CareTimelineProps {
-  serviceUserId: string
-  serviceUserName: string
+function formatDateShort(iso: string): string {
+  try {
+    const d = new Date(iso)
+    return d.toLocaleDateString('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return iso
+  }
 }
 
-export function CareTimeline({ serviceUserId, serviceUserName }: CareTimelineProps) {
+interface CareTimelineProps {
+  serviceUserId: string
+  serviceUserName?: string
+}
+
+export function CareTimeline({ serviceUserId }: CareTimelineProps) {
   const store = useDemoStore()
   const user = getUser()
   const currentStaffId = store.getStaffList().find((s) => s.email === user?.email)?.id ?? null
   const logs = store.getCareLogsByServiceUser(serviceUserId)
+  const lastLog = logs[0] ?? null
+  const lastVisitAuthor = lastLog ? store.getStaff(lastLog.authorId) : null
+  const latestHandover = store.getLatestHandoverForServiceUser(serviceUserId)
   const [showForm, setShowForm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -52,6 +70,7 @@ export function CareTimeline({ serviceUserId, serviceUserName }: CareTimelinePro
       authorId: currentStaffId,
       type: values.type,
       content: values.content.trim(),
+      ...(values.rawContent !== undefined && { rawContent: values.rawContent }),
     })
     setIsSubmitting(false)
     setShowForm(false)
@@ -61,29 +80,56 @@ export function CareTimeline({ serviceUserId, serviceUserName }: CareTimelinePro
     <Card className={styles.timelineCard}>
       <CardHeader>
         <CardTitle>Care timeline</CardTitle>
-        {currentStaffId && (
+        {currentStaffId ? (
           <Button
             variant="primary"
             size="sm"
             onClick={() => setShowForm((v) => !v)}
           >
-            {showForm ? 'Cancel' : 'Add log'}
+            {showForm ? 'Cancel' : 'Take a log'}
           </Button>
+        ) : (
+          <span className="text-muted text-sm">Link your profile to staff to take logs here.</span>
         )}
       </CardHeader>
       <CardContent>
+        {(lastLog || latestHandover) && (
+          <div className={styles.continuity}>
+            {lastLog && (
+              <div className={styles.lastVisit}>
+                <span className={styles.continuityLabel}>Last visit</span>
+                <p className={styles.lastVisitText}>
+                  {lastVisitAuthor?.name ?? 'Unknown'} · {formatDateShort(lastLog.createdAt)}
+                </p>
+                <p className={styles.lastVisitSnippet}>
+                  {lastLog.content.trim().split(/\n/)[0]?.slice(0, 120) ?? lastLog.content.slice(0, 120)}
+                  {(lastLog.content.length > 120 || lastLog.content.includes('\n')) && '…'}
+                </p>
+              </div>
+            )}
+            {latestHandover && (
+              <div className={styles.handover}>
+                <span className={styles.continuityLabel}>Handover</span>
+                <p className={styles.handoverMeta}>
+                  {latestHandover.authorName} · {latestHandover.date} {latestHandover.startTime}–{latestHandover.endTime}
+                </p>
+                <p className={styles.handoverText}>{latestHandover.handoverNote}</p>
+              </div>
+            )}
+          </div>
+        )}
         {showForm && currentStaffId && (
           <div className={styles.formWrap}>
             <CareLogForm
               onSubmit={handleSubmit}
-              submitLabel="Add log"
+              submitLabel="Save log"
               isSubmitting={isSubmitting}
               onCancel={() => setShowForm(false)}
             />
           </div>
         )}
         {logs.length === 0 && !showForm ? (
-          <p className="text-muted text-sm">No care logs yet. Add a log to record visits and observations.</p>
+          <p className="text-muted text-sm">No care logs yet. Carers can take a log here to record visits and observations.</p>
         ) : (
           <ul className={styles.timeline}>
             {logs.map((log) => (
@@ -105,10 +151,12 @@ function CareLogEntry({
   store: ReturnType<typeof useDemoStore>
   currentStaffId: string | null
 }) {
+  const [showRaw, setShowRaw] = useState(false)
   const author = store.getStaff(log.authorId)
   const user = getUser()
   const isAdmin = user?.role === ROLES.ADMIN
   const canEdit = isAdmin || currentStaffId === log.authorId
+  const hasRaw = Boolean(log.rawContent?.trim())
 
   return (
     <li className={styles.entry}>
@@ -121,6 +169,22 @@ function CareLogEntry({
         </span>
       </div>
       <p className={styles.entryContent}>{log.content}</p>
+      {hasRaw && (
+        <div className={styles.rawSection}>
+          <button
+            type="button"
+            onClick={() => setShowRaw((v) => !v)}
+            className={styles.rawToggle}
+          >
+            {showRaw ? 'Hide raw' : 'Show raw'}
+          </button>
+          {showRaw && (
+            <p className={styles.rawContent} aria-label="Raw transcript">
+              {log.rawContent}
+            </p>
+          )}
+        </div>
+      )}
       {canEdit && (
         <div className={styles.entryActions}>
           <Link to={ROUTES_CARE_LOGS.EDIT(log.id)} className={styles.link}>

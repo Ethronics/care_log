@@ -334,7 +334,7 @@ export function DashboardPage() {
                         border: '1px solid var(--color-border)',
                         borderRadius: 'var(--radius-md)',
                       }}
-                      formatter={(value: number, name: string) => [value, name === 'assigned' ? 'Assigned' : name === 'unassigned' ? 'Unassigned' : 'Total']}
+                      formatter={(value: number | undefined, name: string | undefined) => [value ?? 0, name === 'assigned' ? 'Assigned' : name === 'unassigned' ? 'Unassigned' : 'Total']}
                       labelFormatter={(label) => `Day: ${label}`}
                     />
                     <Bar dataKey="assigned" name="assigned" stackId="a" fill={CHART_COLOR_ASSIGNED} radius={[0, 0, 0, 0]} />

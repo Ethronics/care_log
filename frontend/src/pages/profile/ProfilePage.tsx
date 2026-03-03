@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge } from '../../components/ui'
+import { Card, Button, Badge } from '../../components/ui'
 import { useBreadcrumbs } from '../../contexts/BreadcrumbContext'
 import { useDemoStore } from '../../store/demoStoreContext'
 import { getUser, setUser } from '../../utils/auth'

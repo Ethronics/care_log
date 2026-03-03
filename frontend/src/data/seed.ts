@@ -209,6 +209,27 @@ export function seedShifts(): Shift[] {
     }
   }
 
+  // Add sample handover notes for continuity (current week, first shift for su-seed-1 and su-seed-2)
+  const firstDayCurrentWeek = getWeekDays(weekStarts[1])[0]
+  const idx1 = shifts.findIndex((s) => s.serviceUserId === 'su-seed-1' && s.date === firstDayCurrentWeek)
+  if (idx1 >= 0) {
+    shifts[idx1] = {
+      ...shifts[idx1],
+      handoverNote: 'All calm. Morning meds given. Breakfast went well. No concerns for next visit.',
+      handoverAuthorId: 'seed-2',
+      handoverAt: now,
+    }
+  }
+  const idx2 = shifts.findIndex((s) => s.serviceUserId === 'su-seed-2' && s.date === firstDayCurrentWeek)
+  if (idx2 >= 0) {
+    shifts[idx2] = {
+      ...shifts[idx2],
+      handoverNote: 'Good mood. Lunch eaten. Family visiting tomorrow afternoon.',
+      handoverAuthorId: 'seed-3',
+      handoverAt: now,
+    }
+  }
+
   return shifts
 }
 

@@ -70,3 +70,13 @@ The API service is configured in `src/services/api.ts` and automatically:
 - Adds authentication tokens to requests
 - Handles 401 errors (unauthorized)
 - Provides a base URL from environment variables
+
+### Intelligent care log summary
+
+When "Summarize on save" is used, the app calls `POST {API_BASE_URL}/api/summarize` with `{ "text": "..." }` and expects `{ "summary": "..." }`. If the backend is not reachable or the request fails, a short client-side summary is used instead.
+
+To get **intelligent** (LLM) summaries (free tier):
+
+1. Run the backend and set `VITE_API_BASE_URL` (e.g. `http://localhost:8000`) so the frontend can reach it.
+2. In the backend `.env`, set `GEMINI_API_KEY` to your Google Gemini API key (get a free key at https://ai.google.dev/). The backend uses Gemini 1.5 Flash on the free tier; without the key it uses a simple extract.
+3. Optional: override the summarize endpoint with `VITE_SUMMARIZE_API_URL` if you use a different service.

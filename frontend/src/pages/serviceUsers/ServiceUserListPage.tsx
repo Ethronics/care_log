@@ -51,6 +51,11 @@ export function ServiceUserListPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Search service users"
           />
+          {searchQuery.trim() && (
+            <p className={styles.searchHint}>
+              Showing {users.length} of {allUsers.length}
+            </p>
+          )}
         </div>
       )}
 

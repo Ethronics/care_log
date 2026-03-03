@@ -14,7 +14,6 @@ import {
   ResetPasswordPage,
   DashboardPage,
   NotFoundPage,
-  PlaceholderPage,
 } from './pages'
 import { StaffListPage, StaffCreatePage, StaffDetailPage, StaffEditPage } from './pages/staff'
 import {

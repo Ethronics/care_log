@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom'
 import { useBreadcrumbs } from '../../contexts/BreadcrumbContext'
 import { useDemoStore } from '../../store/demoStoreContext'
 import { getUser } from '../../utils/auth'
-import { ROUTES, ROUTES_ROTA, ROLES } from '../../utils/constants'
-import { Button, Card, Badge } from '../../components/ui'
+import { ROUTES, ROUTES_ROTA, ROLES, STORAGE_KEYS } from '../../utils/constants'
+import { Button, Card, Badge, Input } from '../../components/ui'
 import { IconUserPlus } from '../../components/icons'
 import { getWeekRange, formatWeekLabel, addWeek, getWeekDays, formatDayShort } from './weekUtils'
 import { ABSENCE_STATUS } from '../../types/absence'
@@ -20,14 +20,44 @@ export function RotaPage() {
     ? null
     : store.getStaffList().find((s) => s.email === user?.email)?.id ?? null
 
-  const [weekStart, setWeekStart] = useState(() => getWeekRange(new Date()).from)
+  const [weekStart, setWeekStart] = useState(() => {
+    if (typeof sessionStorage === 'undefined') return getWeekRange(new Date()).from
+    const saved = sessionStorage.getItem(STORAGE_KEYS.ROTA_WEEK_START)
+    if (saved && /^\d{4}-\d{2}-\d{2}$/.test(saved)) return saved
+    return getWeekRange(new Date()).from
+  })
+  const [staffFilter, setStaffFilter] = useState(() => {
+    if (typeof sessionStorage === 'undefined') return ''
+    return sessionStorage.getItem(STORAGE_KEYS.ROTA_STAFF_FILTER) ?? ''
+  })
+  const [serviceUserFilterId, setServiceUserFilterId] = useState(() => {
+    if (typeof sessionStorage === 'undefined') return ''
+    return sessionStorage.getItem(STORAGE_KEYS.ROTA_SERVICE_USER_FILTER) ?? ''
+  })
+  const [highlightToday, setHighlightToday] = useState(() => {
+    if (typeof sessionStorage === 'undefined') return true
+    const saved = sessionStorage.getItem(STORAGE_KEYS.ROTA_HIGHLIGHT_TODAY)
+    return saved !== 'false'
+  })
   const [autoFillResult, setAutoFillResult] = useState<{ assigned: number; skipped: number } | null>(null)
   const [unassignCount, setUnassignCount] = useState<number | null>(null)
   const { from, to } = getWeekRange(new Date(weekStart + 'T12:00:00'))
-  const shifts = store.getShifts(
+  const allShifts = store.getShifts(
     currentStaffId ? { from, to, staffId: currentStaffId } : { from, to }
   )
+  const shifts = isAdmin
+    ? allShifts.filter((shift) => {
+        const matchServiceUser = !serviceUserFilterId || shift.serviceUserId === serviceUserFilterId
+        if (!matchServiceUser) return false
+        if (!staffFilter.trim()) return true
+        if (!shift.staffId) return true
+        const staff = store.getStaff(shift.staffId)
+        return staff?.name.toLowerCase().includes(staffFilter.trim().toLowerCase()) ?? false
+      })
+    : allShifts
   const weekDays = getWeekDays(from)
+  const serviceUsers = store.getServiceUserList()
+  const activeFiltersCount = (staffFilter.trim() ? 1 : 0) + (serviceUserFilterId ? 1 : 0)
 
   useEffect(() => {
     setItems([
@@ -42,7 +72,27 @@ export function RotaPage() {
     setUnassignCount(null)
   }, [weekStart])
 
-  const unassignedThisWeek = shifts.filter((s) => !s.staffId).length
+  useEffect(() => {
+    if (typeof sessionStorage === 'undefined') return
+    sessionStorage.setItem(STORAGE_KEYS.ROTA_WEEK_START, weekStart)
+  }, [weekStart])
+
+  useEffect(() => {
+    if (typeof sessionStorage === 'undefined' || !isAdmin) return
+    sessionStorage.setItem(STORAGE_KEYS.ROTA_STAFF_FILTER, staffFilter)
+  }, [isAdmin, staffFilter])
+
+  useEffect(() => {
+    if (typeof sessionStorage === 'undefined' || !isAdmin) return
+    sessionStorage.setItem(STORAGE_KEYS.ROTA_SERVICE_USER_FILTER, serviceUserFilterId)
+  }, [isAdmin, serviceUserFilterId])
+
+  useEffect(() => {
+    if (typeof sessionStorage === 'undefined') return
+    sessionStorage.setItem(STORAGE_KEYS.ROTA_HIGHLIGHT_TODAY, String(highlightToday))
+  }, [highlightToday])
+
+  const unassignedThisWeek = allShifts.filter((s) => !s.staffId).length
 
   const approvedAbsences = store.absences.filter((a) => a.status === ABSENCE_STATUS.APPROVED)
   const activeStaff = store.getStaffList()
@@ -67,6 +117,8 @@ export function RotaPage() {
     acc[day] = shifts.filter((s) => s.date === day)
     return acc
   }, {} as Record<string, typeof shifts>)
+
+  const todayISO = new Date().toISOString().slice(0, 10)
 
   return (
     <div className="container">
@@ -100,6 +152,60 @@ export function RotaPage() {
           </div>
         )}
       </div>
+      {isAdmin && (
+        <div className={styles.filtersWrap}>
+          <Input
+            type="search"
+            label="Filter by carer"
+            placeholder="Search by name..."
+            value={staffFilter}
+            onChange={(e) => setStaffFilter(e.target.value)}
+            className={styles.filterInput}
+            aria-label="Filter rota by carer name"
+          />
+          <div className={styles.serviceUserFilterField}>
+            <label className={styles.filterLabel} htmlFor="rota-service-user-filter">
+              Filter by service user
+            </label>
+            <select
+              id="rota-service-user-filter"
+              className={styles.serviceUserSelect}
+              value={serviceUserFilterId}
+              onChange={(e) => setServiceUserFilterId(e.target.value)}
+              aria-label="Filter rota by service user"
+            >
+              <option value="">All</option>
+              {serviceUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {activeFiltersCount > 0 && (
+            <>
+              <span className={styles.filterHint}>
+                {serviceUserFilterId && staffFilter.trim()
+                  ? `Showing shifts for ${store.getServiceUser(serviceUserFilterId)?.name ?? 'this user'} with carers matching "${staffFilter.trim()}" (and unassigned)`
+                  : serviceUserFilterId
+                    ? `Showing shifts for ${store.getServiceUser(serviceUserFilterId)?.name ?? 'this user'}`
+                    : `Showing shifts for carers matching "${staffFilter.trim()}" and unassigned shifts`}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStaffFilter('')
+                  setServiceUserFilterId('')
+                }}
+                type="button"
+              >
+                Clear filters
+              </Button>
+            </>
+          )}
+        </div>
+      )}
       {isAdmin && (
         <p className={styles.intro}>
           {unassignedThisWeek > 0
@@ -196,26 +302,101 @@ export function RotaPage() {
         <Button variant="ghost" size="sm" onClick={() => setWeekStart(addWeek(from, 1))}>
           Next →
         </Button>
+        {isAdmin && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setWeekStart(getWeekRange(new Date()).from)}
+            type="button"
+          >
+            Today
+          </Button>
+        )}
       </div>
+      {shifts.length > 0 && weekDays.includes(todayISO) && (
+        <p className={styles.todayColumnHint} role="status">
+          {highlightToday ? (
+            <>
+              Today&apos;s column is highlighted.{' '}
+              <button
+                type="button"
+                className={styles.todayColumnToggle}
+                onClick={() => setHighlightToday(false)}
+                aria-pressed="true"
+              >
+                Hide highlight
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className={styles.todayColumnToggle}
+                onClick={() => setHighlightToday(true)}
+                aria-pressed="false"
+              >
+                Highlight today&apos;s column
+              </button>
+            </>
+          )}
+        </p>
+      )}
+      {shifts.length > 0 && (
+        <p className={styles.swipeHint} aria-hidden>
+          Swipe left or right for other days
+        </p>
+      )}
 
       {shifts.length === 0 ? (
         <Card className={styles.emptyCard}>
-          <p className="text-muted">
-            {isAdmin ? 'No shifts this week. Add a shift to get started.' : 'No shifts scheduled for you this week.'}
-          </p>
-          {isAdmin && (
-            <Link to={ROUTES_ROTA.NEW}>
-              <Button variant="primary" className={styles.emptyButton}>
-                Add shift
+          {isAdmin && activeFiltersCount > 0 && allShifts.length > 0 ? (
+            <>
+              <p className="text-muted">
+                No shifts match the current filters. Clear filters to see all shifts.
+              </p>
+              <Button
+                variant="secondary"
+                className={styles.emptyButton}
+                onClick={() => {
+                  setStaffFilter('')
+                  setServiceUserFilterId('')
+                }}
+                type="button"
+              >
+                Clear filters
               </Button>
-            </Link>
+            </>
+          ) : (
+            <>
+              <p className="text-muted">
+                {isAdmin ? 'No shifts this week. Add a shift to get started.' : 'No shifts scheduled for you this week.'}
+              </p>
+              {isAdmin && (
+                <Link to={ROUTES_ROTA.NEW}>
+                  <Button variant="primary" className={styles.emptyButton}>
+                    Add shift
+                  </Button>
+                </Link>
+              )}
+            </>
           )}
         </Card>
       ) : (
         <div className={styles.weekGrid}>
           {weekDays.map((day) => (
-            <div key={day} className={styles.dayColumn}>
-              <div className={styles.dayHeader}>{formatDayShort(day)}</div>
+            <div
+              key={day}
+              className={`${styles.dayColumn} ${day === todayISO && highlightToday ? styles.dayColumnToday : ''}`}
+              aria-current={day === todayISO && highlightToday ? 'date' : undefined}
+            >
+              <div className={styles.dayHeader}>
+                <span className={styles.dayHeaderTitle}>{formatDayShort(day)}</span>
+                {day === todayISO && highlightToday && (
+                  <span className={styles.todayLabel} aria-hidden="false">
+                    Today
+                  </span>
+                )}
+              </div>
               <div className={styles.shifts}>
                 {(shiftsByDate[day] ?? []).map((shift) => (
                   <ShiftCard key={shift.id} shift={shift} isAdmin={isAdmin} />
@@ -246,10 +427,17 @@ function ShiftCard({
   const serviceUser = store.getServiceUser(shift.serviceUserId)
   const staff = shift.staffId ? store.getStaff(shift.staffId) : null
 
+  const hasHandover = Boolean(shift.handoverNote?.trim())
+
   return (
     <Card key={shift.id} padding="sm" className={styles.shiftCard}>
       <div className={styles.shiftTime}>
         {shift.startTime} – {shift.endTime}
+        {hasHandover && (
+          <span className={styles.handoverBadge} title="Has handover note">
+            Handover
+          </span>
+        )}
       </div>
       <div className={styles.shiftServiceUser}>
         {serviceUser?.name ?? 'Unknown'}
@@ -280,6 +468,7 @@ function AssignDropdown({ shift }: { shift: import('../../types/shift').Shift })
   const store = useDemoStore()
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
+  const [assignSearch, setAssignSearch] = useState('')
   const buttonRef = useRef<HTMLDivElement>(null)
   const approvedAbsences = store.getAbsences({ status: ABSENCE_STATUS.APPROVED })
   const isOnLeave = (staffId: string, date: string) =>
@@ -289,11 +478,19 @@ function AssignDropdown({ shift }: { shift: import('../../types/shift').Shift })
   const staffList = store
     .getStaffList()
     .filter((s) => !isOnLeave(s.id, shift.date))
+  const filteredStaff =
+    assignSearch.trim() === ''
+      ? staffList
+      : staffList.filter((s) =>
+          s.name.toLowerCase().includes(assignSearch.trim().toLowerCase())
+        )
+  const showSearch = staffList.length > 5
 
   const handleToggle = () => {
     if (!open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPosition({ top: rect.bottom + 4, left: rect.left })
+      setAssignSearch('')
     }
     setOpen((o) => !o)
   }
@@ -340,7 +537,20 @@ function AssignDropdown({ shift }: { shift: import('../../types/shift').Shift })
               >
                 Unassign
               </button>
-              {staffList.map((s) => (
+              {showSearch && (
+                <div className={styles.dropdownSearch} onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="search"
+                    placeholder="Search staff..."
+                    value={assignSearch}
+                    onChange={(e) => setAssignSearch(e.target.value)}
+                    className={styles.dropdownSearchInput}
+                    autoFocus
+                    aria-label="Filter staff by name"
+                  />
+                </div>
+              )}
+              {filteredStaff.map((s) => (
                 <button
                   key={s.id}
                   type="button"
@@ -353,6 +563,9 @@ function AssignDropdown({ shift }: { shift: import('../../types/shift').Shift })
                   {s.name}
                 </button>
               ))}
+              {showSearch && filteredStaff.length === 0 && (
+                <div className={styles.dropdownEmpty}>No staff match</div>
+              )}
             </div>
           </>,
           document.body

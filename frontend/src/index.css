@@ -22,12 +22,19 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   line-height: var(--leading-normal);
-  /* Use dynamic viewport height so mobile browser chrome doesn't cut off content */
   min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
-  /* Subtle tap highlight instead of default grey */
   -webkit-tap-highlight-color: rgba(13, 148, 136, 0.15);
+}
+
+/* Page-level description text under titles */
+.page-description {
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-6);
+  max-width: 56ch;
 }
 
 #root {

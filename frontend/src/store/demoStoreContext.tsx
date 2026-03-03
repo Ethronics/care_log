@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { STORAGE_KEYS } from '../utils/constants'
-import { DEFAULT_DEMO_STORE, type DemoStore } from '../types/demoStore'
+import type { DemoStore } from '../types/demoStore'
 import type { Staff, StaffCreateInput } from '../types/staff'
 import type { ServiceUser, ServiceUserCreateInput } from '../types/serviceUser'
 import type { Shift, ShiftCreateInput } from '../types/shift'
@@ -81,6 +81,8 @@ interface DemoStoreContextValue extends DemoStore {
   // Shifts
   getShift: (id: string) => Shift | undefined
   getShifts: (options?: { from?: string; to?: string; staffId?: string }) => Shift[]
+  /** Latest handover note for a service user (from any shift), for continuity. */
+  getLatestHandoverForServiceUser: (serviceUserId: string) => (Shift & { authorName: string }) | null
   addShift: (input: ShiftCreateInput) => Shift
   updateShift: (id: string, input: Partial<Shift>) => Shift | undefined
   deleteShift: (id: string) => boolean
@@ -299,6 +301,26 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
     [store.shifts]
   )
 
+  const getLatestHandoverForServiceUser = useCallback(
+    (serviceUserId: string): (Shift & { authorName: string }) | null => {
+      const withHandover = store.shifts.filter(
+        (s) => s.serviceUserId === serviceUserId && (s.handoverNote ?? '').trim()
+      )
+      if (withHandover.length === 0) return null
+      const sorted = [...withHandover].sort((a, b) => {
+        const at = a.handoverAt || a.updatedAt
+        const bt = b.handoverAt || b.updatedAt
+        return bt.localeCompare(at)
+      })
+      const shift = sorted[0]
+      const author = shift.handoverAuthorId
+        ? store.staff.find((s) => s.id === shift.handoverAuthorId)
+        : undefined
+      return { ...shift, authorName: author?.name ?? 'Unknown' }
+    },
+    [store.shifts, store.staff]
+  )
+
   const addShift = useCallback((input: ShiftCreateInput): Shift => {
     const now = new Date().toISOString()
     const shift: Shift = {
@@ -415,6 +437,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       authorId: input.authorId,
       type: input.type,
       content: input.content,
+      ...(input.rawContent !== undefined && { rawContent: input.rawContent }),
       createdAt: now,
       updatedAt: now,
     }
@@ -629,7 +652,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
           ...Array.from(assignments.entries())
             .filter(([, sid]) => sid === staffId)
             .map(([id]) => store.shifts.find((s) => s.id === id))
-            .filter((s): s is Shift => Boolean(s) && s.date === date),
+            .filter((s): s is Shift => s != null && s.date === date),
         ]
         available = available.filter((s) => {
           const onDate = shiftsForStaffOnDate(s.id, shift.date)
@@ -643,7 +666,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
             ...Array.from(assignments.entries())
               .filter(([, sid]) => sid === staffId)
               .map(([shiftId]) => store.shifts.find((s) => s.id === shiftId))
-              .filter((s): s is Shift => Boolean(s)),
+              .filter((s): s is Shift => s != null),
           ]
           return shifts.reduce((sum, s) => sum + shiftDurationHours(s), 0)
         }
@@ -656,7 +679,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
             ...Array.from(assignments.entries())
               .filter(([, sid]) => sid === staffId)
               .map(([id]) => store.shifts.find((s) => s.id === id))
-              .filter((s): s is Shift => Boolean(s) && s.serviceUserId === shift.serviceUserId),
+              .filter((s): s is Shift => s != null && s.serviceUserId === shift.serviceUserId),
           ].length
 
         const contracted = (s: Staff) => s.contractedHoursPerWeek ?? 999
@@ -708,6 +731,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       deactivateServiceUser,
       getShift,
       getShifts,
+      getLatestHandoverForServiceUser,
       addShift,
       updateShift,
       deleteShift,
@@ -749,6 +773,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
       deactivateServiceUser,
       getShift,
       getShifts,
+      getLatestHandoverForServiceUser,
       addShift,
       updateShift,
       deleteShift,

@@ -3,9 +3,10 @@ import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useBreadcrumbs } from '../../contexts/BreadcrumbContext'
 import { useDemoStore } from '../../store/demoStoreContext'
 import { getUser } from '../../utils/auth'
-import { ROUTES, ROUTES_CARE_LOGS, ROUTES_SERVICE_USERS, ROLES } from '../../utils/constants'
+import { ROUTES, ROUTES_SERVICE_USERS, ROLES } from '../../utils/constants'
 import { Card, CardHeader, CardTitle, CardContent, Button, ConfirmDialog } from '../../components/ui'
 import { CareLogForm, careLogToFormValues, type CareLogFormValues } from './CareLogForm'
+import styles from './CareLogEditPage.module.css'
 
 const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000 // 24 hours for non-admin authors
 
@@ -57,7 +58,12 @@ export function CareLogEditPage() {
   const handleSubmit = (values: CareLogFormValues) => {
     if (!id) return
     setIsSubmitting(true)
-    store.updateCareLog(id, { type: values.type, content: values.content.trim() })
+    const update: { type: CareLogFormValues['type']; content: string; rawContent?: string } = {
+      type: values.type,
+      content: values.content.trim(),
+    }
+    if (values.rawContent !== undefined) update.rawContent = values.rawContent
+    store.updateCareLog(id, update)
     setIsSubmitting(false)
     navigate(ROUTES_SERVICE_USERS.DETAIL(log!.serviceUserId))
   }
@@ -112,11 +118,18 @@ export function CareLogEditPage() {
           <CardTitle>Log entry</CardTitle>
         </CardHeader>
         <CardContent>
+          {log.rawContent?.trim() && (
+            <details className={styles.rawDetails}>
+              <summary>View raw transcript</summary>
+              <pre className={styles.rawBlock}>{log.rawContent}</pre>
+            </details>
+          )}
           <CareLogForm
             initialValues={careLogToFormValues(log)}
             onSubmit={handleSubmit}
             submitLabel="Save changes"
             isSubmitting={isSubmitting}
+            showVoiceAndSummarize={true}
           />
           <div style={{ marginTop: 'var(--space-6)' }}>
             <Button variant="danger" size="sm" onClick={() => setShowDeleteConfirm(true)}>

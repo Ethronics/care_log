@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className={styles.message}>
               An unexpected error occurred. You can try again or return to the dashboard.
             </p>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <pre className={styles.detail}>{this.state.error.message}</pre>
             )}
             <div className={styles.actions}>
